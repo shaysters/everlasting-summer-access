@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.1
+
+- New standalone installer, **EverlastingSummerAccessInstaller.exe**. It finds your Steam copy of the game, installs, updates and uninstalls the mod, and removes the older Tolk mod's files. It replaces install.ps1.
+- The download zip now holds the mod's files in a `game` folder, ready to merge into the game's folder for a manual install.
+
 ## 0.9.0
 
 First test release.

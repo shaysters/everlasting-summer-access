@@ -1,0 +1,18 @@
+{
+  "manifestVersion": 1,
+  "kind": "game",
+  "id": "everlasting-summer",
+  "name": "Everlasting Summer",
+  "detect": {
+    "steam": {
+      "appId": 331470,
+      "dirName": "Everlasting Summer"
+    },
+    "markers": [
+      "Everlasting Summer.exe"
+    ]
+  },
+  "userData": {
+    "windows": "${gameDir}/game/saves"
+  }
+}

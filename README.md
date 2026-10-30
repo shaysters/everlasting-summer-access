@@ -15,27 +15,32 @@ It works with NVDA, JAWS and other Windows screen readers, and falls back to Win
 ## Installing
 
 1. Close Everlasting Summer if it's running.
-2. Download **EverlastingSummerAccess.zip** from the [latest release](https://github.com/shaysters/everlasting-summer-access/releases) and extract it anywhere.
-3. Right-click **install.ps1** and choose **Run with PowerShell**. It installs into the default Steam folder. If your game is somewhere else, install by hand instead (see below).
-4. Start Everlasting Summer from Steam as usual. The mod starts speaking straight away.
+2. Download **EverlastingSummerAccessInstaller.exe** from the [latest release](https://github.com/shaysters/everlasting-summer-access/releases/latest).
+3. Run it. It finds your Steam copy of Everlasting Summer by itself. If it can't, use the Browse button next to the game folder and choose the folder that contains `Everlasting Summer.exe`.
+4. Choose **Install**.
+5. Start Everlasting Summer from Steam as usual. The mod starts speaking straight away.
+
+If the installer won't start and mentions `VCRUNTIME140.dll`, install the [Microsoft Visual C++ Redistributable (x64)](https://aka.ms/vs/17/release/vc_redist.x64.exe) and try again.
 
 The first time you start the game it asks for a language. The mod reads the list; choose English with Enter. The game then shows its license (Up and Down to read it, Enter on "Yes" to accept) and a disclaimer, which the mod reads. Press Enter to continue past the disclaimer; the game shows it every time it starts.
 
+### Updating and uninstalling
+
+Keep the installer. Run it again to update to the newest version, or to uninstall. Close the game first.
+
 ### Installing by hand
 
-Copy everything inside the mod's `game` folder into the game's own `game` folder. On a default Steam install that's:
+If you'd rather not use the installer, download **EverlastingSummerAccess.zip** from the same release and extract it anywhere. Copy the `game` folder from it into the game's folder, the one that contains `Everlasting Summer.exe`, and let it merge with the game's own `game` folder. On a default Steam install that's:
 
 ```
-C:\Program Files (x86)\Steam\steamapps\common\Everlasting Summer\game
+C:\Program Files (x86)\Steam\steamapps\common\Everlasting Summer
 ```
 
-### Uninstalling
-
-Delete these files from the game's `game` folder: `prism.dll`, and every file starting with `zz_es_a11y_` (the `.rpy` files and the `.rpyc` files the game makes from them). The mod doesn't change any of the game's own files.
+To uninstall a manual install, delete these files from the game's `game` folder: `prism.dll`, and every file starting with `zz_es_a11y_` (the `.rpy` files and the `.rpyc` files the game makes from them). The mod doesn't change any of the game's own files.
 
 ### Upgrading from the older Tolk mod
 
-An earlier version of this mod used Tolk. The two can't be installed together. **install.ps1** moves the old files out of the way for you. If you install by hand, first delete these from the game's `game` folder: `zz_everlasting_summer_tolk_tts.rpy`, `zz_everlasting_summer_tolk_tts.rpyc`, `Tolk32.dll`, `Tolk64.dll`, `nvdaControllerClient32.dll` and `nvdaControllerClient64.dll`.
+An earlier version of this mod used Tolk. The two can't be installed together. The installer removes the old files for you. If you install by hand, first delete these from the game's `game` folder: `zz_everlasting_summer_tolk_tts.rpy`, `zz_everlasting_summer_tolk_tts.rpyc`, `Tolk32.dll`, `Tolk64.dll`, `nvdaControllerClient32.dll` and `nvdaControllerClient64.dll`.
 
 ## Keys
 

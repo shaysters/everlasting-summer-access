@@ -1,0 +1,9 @@
+{
+  "mode": "single-mod",
+  "mod": "everlasting-summer-access",
+  "title": "Everlasting Summer Access Installer",
+  "registries": [
+    "github:shaysters/everlasting-summer-access"
+  ],
+  "lockRegistries": true
+}

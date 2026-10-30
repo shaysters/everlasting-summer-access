@@ -1,0 +1,81 @@
+{
+  "manifestVersion": 1,
+  "id": "everlasting-summer-access",
+  "name": "Everlasting Summer Access",
+  "description": "Screen reader accessibility for Everlasting Summer. Reads dialogue, choices and every menu, guides you through the camp map and the card game, and describes every background and illustration.",
+  "authors": [
+    "Shaysters",
+    "Claude"
+  ],
+  "game": "everlasting-summer",
+  "distributions": {
+    "steam": "supported"
+  },
+  "channels": {
+    "stable": {
+      "source": "release"
+    }
+  },
+  "install": [
+    {
+      "step": "delete-files",
+      "paths": [
+        "${gameDir}/game/zz_everlasting_summer_tolk_tts.rpy",
+        "${gameDir}/game/zz_everlasting_summer_tolk_tts.rpyc",
+        "${gameDir}/game/Tolk32.dll",
+        "${gameDir}/game/Tolk64.dll",
+        "${gameDir}/game/nvdaControllerClient32.dll",
+        "${gameDir}/game/nvdaControllerClient64.dll"
+      ]
+    },
+    {
+      "step": "extract-archive",
+      "routes": [
+        {
+          "from": "game/**",
+          "to": "${gameDir}/game"
+        }
+      ]
+    },
+    {
+      "step": "expect",
+      "checks": [
+        {
+          "fileExists": "${gameDir}/game/zz_es_a11y_core.rpy",
+          "message": "The download didn't contain the mod (no zz_es_a11y_core.rpy)."
+        },
+        {
+          "fileExists": "${gameDir}/game/prism.dll",
+          "message": "The download didn't contain the speech library (no prism.dll)."
+        }
+      ]
+    }
+  ],
+  "uninstall": [
+    {
+      "step": "delete-files",
+      "paths": [
+        "${gameDir}/game/zz_es_a11y_core.rpyc",
+        "${gameDir}/game/zz_es_a11y_screens.rpyc",
+        "${gameDir}/game/zz_es_a11y_descriptions.rpyc",
+        "${gameDir}/es_a11y_log.txt"
+      ]
+    }
+  ],
+  "cleanupLegacy": [
+    "${gameDir}/game/zz_everlasting_summer_tolk_tts.rpy",
+    "${gameDir}/game/zz_everlasting_summer_tolk_tts.rpyc",
+    "${gameDir}/game/Tolk32.dll",
+    "${gameDir}/game/Tolk64.dll",
+    "${gameDir}/game/nvdaControllerClient32.dll",
+    "${gameDir}/game/nvdaControllerClient64.dll",
+    "${gameDir}/game/es_tts_debug.log"
+  ],
+  "packaging": {
+    "artifacts": [
+      {
+        "file": "../dist/EverlastingSummerAccess.zip"
+      }
+    ]
+  }
+}
