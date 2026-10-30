@@ -1,0 +1,8 @@
+# Compiled by Ren'Py when the game runs
+*.rpyc
+# Logs and test-only switches
+es_a11y_log.txt
+game/es_a11y_debug.txt
+game/es_a11y_mute.txt
+# Release builds
+dist/
