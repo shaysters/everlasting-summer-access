@@ -40,7 +40,7 @@ init -100 python:
         es_log("EXCEPTION in {0}:\n{1}".format(context, _es_traceback.format_exc()))
 
     es_log("=" * 60)
-    ES_VERSION = "0.9.1"
+    ES_VERSION = "0.9.2"
     es_log("Everlasting Summer accessibility mod {0} loading.".format(ES_VERSION))
 
     # ------------------------------------------------------------------
@@ -767,3 +767,85 @@ init 999 python:
         store.show_achievement = es_show_achievement
 
     es_log("Core hooks installed.")
+
+
+# ----------------------------------------------------------------------
+# Update check. Once per game start, asks GitHub for the latest release
+# and says so if it's newer than ES_VERSION. Reads the release manifest
+# the installer itself uses (a plain redirect, no API token or rate
+# limit), through Windows' own curl.exe in the background, polled from a
+# periodic callback. The notice waits for the main menu and a moment of
+# silence, so it neither cuts off the start-up speech nor gets cut off by
+# it. Nothing is sent except the request itself, and a failed check is
+# only logged.
+# ----------------------------------------------------------------------
+
+init 1000 python:
+    ES_UPDATE_URL = "https://github.com/shaysters/everlasting-summer-access/releases/latest/download/loadstone-release.json"
+    ES_UPDATE_QUIET = 2.0
+
+    es_update = {"proc": None, "latest": None, "done": False}
+    es_last_speech = [time.time()]
+
+    def es_track_speech():
+        # Note when anything is spoken, so the update notice can wait for a pause.
+        orig = es.speak
+        def speak(text, interrupt=True):
+            es_last_speech[0] = time.time()
+            return orig(text, interrupt)
+        es.speak = speak
+
+    es_track_speech()
+
+    def es_version_tuple(s):
+        try:
+            return tuple(int(p) for p in s.split("."))
+        except Exception:
+            return None
+
+    def es_update_tick():
+        u = es_update
+        if u["done"]:
+            return
+        try:
+            if u["latest"]:
+                if es_detect()[0][0] == "main_menu" and time.time() - es_last_speech[0] >= ES_UPDATE_QUIET:
+                    u["done"] = True
+                    text = u"Everlasting Summer Access version {0} is available. Run the installer to update.".format(u["latest"])
+                    es_log("Update announced.")
+                    # R repeats it until the story starts.
+                    if not es.last_line:
+                        es.last_line = text
+                    es.speak(text, False)
+                return
+            if u["proc"] is None:
+                import subprocess
+                curl = os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "System32", "curl.exe")
+                if not os.path.exists(curl):
+                    curl = "curl"
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW  # keep the console hidden
+                u["proc"] = subprocess.Popen(
+                    [curl, "-s", "-L", "--max-time", "15", ES_UPDATE_URL],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo)
+                return
+            if u["proc"].poll() is None:
+                return
+            out = u["proc"].stdout.read()
+            m = re.search(r'"version"\s*:\s*"v?([0-9.]+)"', out or "")
+            if not m:
+                u["done"] = True
+                es_log("Update check skipped (exit code {0}).".format(u["proc"].returncode))
+                return
+            latest = m.group(1)
+            es_log("Update check: installed {0}, latest {1}".format(ES_VERSION, latest))
+            lv, iv = es_version_tuple(latest), es_version_tuple(ES_VERSION)
+            if lv and iv and lv > iv:
+                u["latest"] = latest
+            else:
+                u["done"] = True
+        except Exception:
+            u["done"] = True
+            es_log_exc("update check")
+
+    config.periodic_callbacks.append(es_update_tick)

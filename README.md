@@ -5,7 +5,7 @@ Everlasting Summer Access is a mod that makes Everlasting Summer, the visual nov
 It works with NVDA, JAWS and other Windows screen readers, and falls back to Windows' built-in voices if no screen reader is running. You play with the keyboard.
 
 - Join the Discord to chat, get help or report problems: <https://discord.gg/KNDXhztGGK>
-- Support the project on Ko-fi: <https://ko-fi.com/shaysters>
+- Support shaysters on Ko-fi: <https://ko-fi.com/shaysters>
 
 ## Requirements
 
@@ -26,7 +26,7 @@ The first time you start the game it asks for a language. The mod reads the list
 
 ### Updating and uninstalling
 
-Keep the installer. Run it again to update to the newest version, or to uninstall. Close the game first.
+Keep the installer. Run it again to update to the newest version, or to uninstall. Close the game first. The installer says on its first page when an update is available, and the mod tells you too, once the main menu has been read.
 
 ### Installing by hand
 
@@ -104,8 +104,18 @@ It says which speech output Prism found. If something goes wrong, include the lo
 - **A second voice (Windows speech) talks about self-voicing or the clipboard:** that is Ren'Py's own speech feature. The mod turns it off, so restarting the game with the current version stops it.
 - **The game shows an error when it starts:** check for files left over from the older Tolk mod (see above) and delete them.
 
+To report a problem or suggest something, open an issue on the [GitHub page](https://github.com/shaysters/everlasting-summer-access/issues).
+
 ## Credits
 
 The mod's code, including the rewrite from the older Tolk mod and its fixes, was written by Claude, Anthropic's AI model, in Claude Code. The image descriptions were written by Claude too.
 
+The installer is built with [Loadstone](https://github.com/bradjrenshaw/loadstone) by [Bradley Renshaw](https://github.com/bradjrenshaw).
+
 Speech is provided by [Prism](https://github.com/ethindp/prism) by Ethin Probst, under the MPL-2.0 license. Its license files are in the `prism_licenses` folder.
+
+Everlasting Summer is made by Soviet Games. This mod isn't affiliated with or endorsed by Soviet Games.
+
+## For developers
+
+Release instructions are in [DEVELOPING.md](DEVELOPING.md).

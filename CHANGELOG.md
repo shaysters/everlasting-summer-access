@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2
+
+- When the main menu has been read, the mod tells you if a newer version is out. Run the installer to update. R repeats the message until the story starts.
+
 ## 0.9.1
 
 - New standalone installer, **EverlastingSummerAccessInstaller.exe**. It finds your Steam copy of the game, installs, updates and uninstalls the mod, and removes the older Tolk mod's files. It replaces install.ps1.
