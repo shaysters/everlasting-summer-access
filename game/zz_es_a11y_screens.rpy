@@ -55,6 +55,156 @@ init -90 python:
         except Exception:
             return default
 
+    def es_screen_parts(screen):
+        # Reads a displayed screen as it is drawn: plain text, and buttons
+        # with their own actions. Used for screens of other mods whose
+        # buttons depend on their internal state, so nothing of theirs has
+        # to be copied. Returns ("text", str) and ("button", str, action).
+        out = []
+        seen = __builtin__.set()
+
+        def text_of(d):
+            parts = []
+            def walk(x):
+                if isinstance(x, renpy.text.text.Text):
+                    parts.append(u"".join(t for t in x.text if isinstance(t, __builtin__.basestring)))
+                    return
+                for c in x.visit() or []:
+                    if c is not None:
+                        walk(c)
+            walk(d)
+            return es.clean(u" ".join(parts))
+
+        def walk(d):
+            if d is None or id(d) in seen:
+                return
+            seen.add(id(d))
+            if isinstance(d, renpy.display.behavior.Button):
+                out.append(("button", text_of(d), d.action))
+                return
+            if isinstance(d, renpy.text.text.Text):
+                t = text_of(d)
+                if t:
+                    out.append(("text", t))
+                return
+            for c in d.visit() or []:
+                walk(c)
+
+        try:
+            walk(getattr(screen, "child", None))
+        except Exception:
+            es_log_exc("es_screen_parts")
+        return out
+
+    # Names for picture-only buttons, worked out from what the button does.
+    ES_ACTION_FUNCTION_LABELS = {
+        "cur_page_dec": u"Previous page", "cur_page_inc": u"Next page",
+        "cur_char_idx_dec": u"Previous character", "cur_char_idx_inc": u"Next character",
+        "reset_vars": u"Back", "previous": u"Previous track", "next": u"Next track",
+        "stop": u"Stop the music and close",
+    }
+    ES_ACTION_JUMP_LABELS = {
+        "main_menu_7dl": u"Back to the 7 Days of Summer menu",
+        "alt_stories_start": u"Back to Stories",
+    }
+
+    def es_flat_actions(action):
+        out = []
+        if isinstance(action, (__builtin__.list, tuple)):
+            for a in action:
+                out.extend(es_flat_actions(a))
+        elif action is not None:
+            out.append(action)
+        return out
+
+    def es_action_label(action):
+        acts = es_flat_actions(action)
+        kinds = [type(a).__name__ for a in acts]
+        for a in acts:
+            if type(a).__name__ == "Jump":
+                target = getattr(a, "label", None)
+                if target in ES_ACTION_JUMP_LABELS:
+                    return ES_ACTION_JUMP_LABELS[target]
+        for a, kind in __builtin__.zip(acts, kinds):
+            if kind == "Function":
+                fn = getattr(getattr(a, "callable", None), "__name__", "")
+            else:
+                fn = getattr(a, "__name__", "")
+            if fn in ES_ACTION_FUNCTION_LABELS:
+                return ES_ACTION_FUNCTION_LABELS[fn]
+            if kind == "PauseAudio":
+                return u"Play or pause"
+            if "Shuffle" in kind:
+                return u"Shuffle on or off"
+            if "Loop" in kind or "SingleTrack" in kind or kind == "If":
+                return u"Repeat mode"
+            if kind.endswith("Stop") and "MusicRoom" in kind:
+                return u"Stop the music and close"
+        # A button that only closes something.
+        if acts and __builtin__.all(k in ("Hide", "With") for k in kinds):
+            return u"Close"
+        return u""
+
+    # Fixed interface words of 7 Days of Summer, in English.
+    ES_7DL_UI_WORDS = [
+        (u"^ПРОСЛУШАНО: (.*)$", u"Listened to: \\1"),
+        (u"^СТРАНИЦА (\\d+)/(\\d+)$", u"Page \\1 of \\2"),
+        (u"^Открыто концовок: (.*)$", u"Endings unlocked: \\1"),
+        (u"^Прогресс прохождения мода: (.*)$", u"Mod completion: \\1"),
+        (u"^День (\\d+)$", u"Day \\1"),
+        (u"^Часть (\\d+)$", u"Part \\1"),
+        (u"^Пролог$", u"Prologue"), (u"^Коммон-рут$", u"Common route"),
+        (u"^Семён$", u"Semyon"), (u"^Ульяна$", u"Ulyana"), (u"^Ольга$", u"Olga"),
+        (u"^Лена$", u"Lena"), (u"^Славя$", u"Slavya"), (u"^Алиса$", u"Alisa"),
+        (u"^Мику$", u"Miku"), (u"^\\?+$", u"Locked"),
+    ]
+
+    def es_7dl_words(text):
+        for pattern, english in ES_7DL_UI_WORDS:
+            if re.match(pattern, text):
+                return re.sub(pattern, english, text)
+        return text
+
+    def es_scraped_items(screen, labels=None, skip_empty=True):
+        # labels maps on-screen text (or a button's position among the
+        # buttons, for picture buttons) to an English label. Runs of locked
+        # entries are read as one.
+        labels = labels or {}
+        items = []
+        n = 0
+        locked = [0]
+
+        def flush():
+            if locked[0] == 1:
+                items.append(ESItem(u"Locked"))
+            elif locked[0] > 1:
+                items.append(ESItem(u"{0} locked entries".format(locked[0])))
+            locked[0] = 0
+
+        for part in es_screen_parts(screen):
+            if part[0] == "text":
+                label = labels.get(part[1]) or es_7dl_words(part[1])
+                if label == u"Locked":
+                    locked[0] += 1
+                    continue
+                flush()
+                items.append(ESItem(label))
+                continue
+            n += 1
+            label = labels.get(part[1]) or labels.get(n) or es_7dl_words(part[1]) or es_action_label(part[2])
+            if not label and skip_empty:
+                continue
+            if label == u"Locked":
+                locked[0] += 1
+                continue
+            flush()
+            if part[2] is None:
+                items.append(ESItem(label))
+            else:
+                items.append(ESItem(label, part[2]))
+        flush()
+        return items
+
     def es_onoff(value):
         return u"on" if value else u"off"
 
@@ -99,7 +249,7 @@ init -90 python:
     # Save and load.
     # ------------------------------------------------------------------
 
-    ES_PAGES = ["auto"] + [str(i) for i in range(1, 10)]
+    ES_PAGES = ["auto"] + [__builtin__.str(i) for i in __builtin__.range(1, 10)]
 
     def es_page_name(page=None):
         if page is None:
@@ -133,7 +283,7 @@ init -90 python:
     def es_items_file(screen, saving):
         items = [ESItem(lambda: u"{0}. Left and right arrows change page.".format(es_page_name()),
             adjust=es_change_page)]
-        for i in range(1, 13):
+        for i in __builtin__.range(1, 13):
             if saving:
                 action = [SetVariable("selected_slot", i), FunctionCallback(on_save_callback, i), FileSave(i)]
             else:
@@ -309,7 +459,7 @@ init -90 python:
     def es_items_mods(screen):
         items = []
         try:
-            for lbl, name in sorted(store.mods.iteritems()):
+            for lbl, name in __builtin__.sorted(store.mods.iteritems()):
                 items.append(ESItem(es.clean(name), [SetField(persistent, "jump_to", lbl), Start()]))
         except Exception:
             es_log_exc("es_items_mods")
@@ -488,7 +638,7 @@ init -90 python:
 
     def es_items_music_room(screen):
         items = []
-        for name, track in sorted(music_box.iteritems()):
+        for name, track in __builtin__.sorted(music_box.iteritems()):
             items.append(ESItem(name, mr.Play(track), after=renpy.curry(lambda n: es.ui(u"Playing " + n))(name)))
         items += [
             ESItem(u"Switch to sprites", [ShowMenu("gallery_sp"), SetVariable("page", 0)]),
@@ -631,7 +781,7 @@ init -90 python:
     def es_items_map():
         items = []
         zones = getattr(store, "global_zones", {}) or {}
-        names = [n for n in ES_ZONE_ORDER if n in zones] + sorted(n for n in zones if n not in ES_ZONE_ORDER)
+        names = [n for n in ES_ZONE_ORDER if n in zones] + __builtin__.sorted(n for n in zones if n not in ES_ZONE_ORDER)
         for name in names:
             data = zones[name]
             if data.get("available"):
@@ -693,7 +843,7 @@ init -90 python:
             if card.name != name_of_none and es_card_visible(card):
                 counts[card.name[0]] = counts.get(card.name[0], 0) + 1
         groups = []
-        for value, count in sorted(counts.items(), key=lambda kv: -kv[1]):
+        for value, count in __builtin__.sorted(counts.items(), key=lambda kv: -kv[1]):
             if count >= 2:
                 word = {2: u"pair", 3: u"three", 4: u"four"}.get(count, u"set")
                 groups.append(u"{0} of {1}s".format(word, ES_VALUES.get(value, unicode(value))))
@@ -805,8 +955,8 @@ init -90 python:
                 pass
             return u" ".join(news)
         old = es.cards_counts
-        gained = [k for k in counts for n in range(counts[k] - old.get(k, 0))]
-        lost = [k for k in old for n in range(old[k] - counts.get(k, 0))]
+        gained = [k for k in counts for n in __builtin__.range(counts[k] - old.get(k, 0))]
+        lost = [k for k in old for n in __builtin__.range(old[k] - counts.get(k, 0))]
         if lost:
             news.append(u"You gave away {0}.".format(u", ".join(es_card_label(k) for k in lost)))
         if gained:
@@ -1063,7 +1213,7 @@ init -90 python:
     def es_items_alt_preferences(screen):
         # Reuse standard preferences list and add 7DL-specific toggle when applicable
         base = es_items_preferences(screen)
-        items = list(base.items)
+        items = __builtin__.list(base.items)
 
         if getattr(persistent, "pivo_default_7dl", False):
             if not getattr(store, "use_settings_7dl", False):
@@ -1107,10 +1257,108 @@ init -90 python:
         return ESMode("alt_quit", screen, items, u"Quit the game?",
                       escape=Hide("alt_quit", transition=Dissolve(0.2)))
 
+    def es_notice_lines(text):
+        # One list entry per paragraph of a 7DL notice, so long notices can
+        # be read a line at a time.
+        lines = []
+        for part in re.split(r"\n+", text or u""):
+            part = es.clean(part)
+            if part:
+                lines.append(ESItem(part))
+        return lines
+
     def es_items_alt_changelog(screen):
-        items = [ESItem(u"OK", Hide("alt_changelog", transition=Dissolve(0.5)))]
-        return ESMode("alt_changelog", screen, items, u"Changelog.",
-                      escape=Hide("alt_changelog", transition=Dissolve(0.5)))
+        # Called with return_on_close when the mod shows it by itself after
+        # an update; then only Return closes it.
+        if es_scope(screen, "return_on_close", False):
+            close = Return(True)
+        else:
+            close = Hide("alt_changelog", transition=Dissolve(0.5))
+        items = es_notice_lines(es_scope(screen, "alt_text")) + [ESItem(u"OK", close)]
+        return ESMode("alt_changelog", screen, items, u"Notice.", escape=close)
+
+    # The opening choice of hero. The fourth, the Major, appears once the
+    # other three have each reached their true ending.
+    ES_7DL_HEROES = [
+        ("loki", u"Loki. \"Forgive. Farewell.\" Everyone gets the reality they deserve."),
+        ("herc", u"Herc. \"Cool it, pal!\" Not every problem is solved by force, and not everything is measured by honesty."),
+        ("dr", u"Drisch, the weakling. \"It all began...\" All he cares about is his loneliness and his computer."),
+    ]
+
+    def es_items_charsel(screen, major=False):
+        items = []
+        for var, label in ES_7DL_HEROES:
+            items.append(ESItem(label, [SetVariable(var, True), Jump("alt_day0_char")]))
+        if major:
+            items.append(ESItem(u"The Major. \"Nothing is forever...\" Thinking about the inevitability of death only brings your end closer.",
+                Jump("alt_day0_char")))
+        return ESMode("charsel_7dl", screen, items, u"Choose your hero.")
+
+    def es_items_dlc_actsel(screen):
+        acts = [
+            (1, u"Act one: The Owlet and the Butterfly", True),
+            (2, u"Act two: The Trofimovs", getattr(persistent, "dlc_act1", False)),
+            (3, u"Act three: Boris", getattr(persistent, "dlc_act2", False)),
+        ]
+        items = []
+        for n, label, open_ in acts:
+            if open_:
+                items.append(ESItem(label, Jump("alt_dlc_act_{0}_start".format(n))))
+            else:
+                items.append(ESItem(label + u", locked until you finish the act before it."))
+        return ESMode("dlc_actsel", screen, items, u"Choose an act.")
+
+    ES_7DL_SAVE_WARNING_LABELS = {
+        u"Загрузить это сохранение": u"Load this save",
+        u"Загрузить другое сохранение": u"Load another save",
+        u"Вернуться на начало дня": u"Go back to the start of the day",
+        u"Начать игру заново": u"Start the game over",
+        u"Загрузить это сохранение. На свой страх и риск, о возможных последствиях предупрежден.":
+            u"Load this save anyway, at your own risk",
+        u"Ваши действия:": u"What do you want to do?",
+        u"РАБОТОСПОСОБНОСТЬ НЕ ГАРАНТИРУЕТСЯ. ВЫЛЕТ ИГРЫ ВОЗМОЖЕН В ЛЮБОЙ МОМЕНТ":
+            u"It may not work, and the game may crash at any moment.",
+        u"РЕКОМЕНДУЕТСЯ НАЧАТЬ ИГРУ ЗАНОВО": u"Starting the game over is recommended.",
+        u"ЕСЛИ В ПРОЦЕССЕ ДАЛЬНЕЙШЕГО ПРОХОЖДЕНИЯ ВЫ СТОЛКНЁТЕСЬ С ОШИБКАМИ, ЗАГРУЗИТЕ ЭТО СОХРАНЕНИЕ И ВЫБЕРИТЕ «ВЕРНУТЬСЯ НА НАЧАЛО ДНЯ»":
+            u"If you run into errors later on, load this save again and choose Go back to the start of the day.",
+    }
+
+    def es_items_7dl_save_warning(screen):
+        # Shown when loading a save from an older version of 7 Days of Summer.
+        items = es_scraped_items(screen, ES_7DL_SAVE_WARNING_LABELS)
+        return ESMode("save_warning_7dl", screen, items,
+            u"This save comes from an older version of 7 Days of Summer.")
+
+    def es_items_un_cl_selector(screen):
+        items = es_scraped_items(screen, {1: u"Day 3", 2: u"Day 4", 3: u"Back to Stories"})
+        return ESMode("un_cl_selector_7dl", screen, items, u"Lena-classic. Choose where to start.")
+
+    def es_items_alt_timer(screen):
+        items = [ESItem(u"Return to the camp! Press 7 or Enter now.", [Hide("alt_timer"), Return()])]
+        return ESMode("alt_timer", screen, items, u"Quick!")
+
+    def es_items_replays_7dl(screen):
+        # The Moments tab of Stories: replays of scenes, by route and day.
+        # Titles are read from the screen, in the mod's own language.
+        items = es_scraped_items(screen, {u"…": u"Back"})
+        stories = es_screen("stories_main_7dl")
+        if stories is not None:
+            items += es_items_stories_main_7dl(stories).items
+        return ESMode("replays_7dl", screen, items, u"Moments. Replay scenes you have seen.")
+
+    def es_items_music_7dl(screen):
+        items = es_scraped_items(screen)
+        return ESMode("music_7dl", screen, items, u"Music player.",
+            escape=Hide("music_7dl", transition=Dissolve(0.2)))
+
+    def es_items_achievements_7dl(screen):
+        items = [ESItem(u"The achievement list is pictures only, so it can't be read yet.")]
+        items += es_scraped_items(es_screen("sdl_achv_section_selector") or screen)
+        return ESMode("achievements_7dl", screen, items, u"Achievements.")
+
+    def es_items_alt_700(screen):
+        items = es_notice_lines(es_scope(screen, "alt_text")) + [ESItem(u"OK", Return(True))]
+        return ESMode("alt_700", screen, items, u"Notice.", escape=Return(True))
 
     def es_items_alt_copy_saves(screen):
         fnkt = es_scope(screen, "fnkt")
@@ -1501,7 +1749,7 @@ init -90 python:
     def es_items_sdl_gall_photos(screen):
         mode = getattr(store, "sdl_gall_mode", "") or "arts"
         page = int(getattr(store, "sdl_gall_page", 1) or 1)
-        curr = list(getattr(store, "sdl_gall_curr_list", []) or [])
+        curr = __builtin__.list(getattr(store, "sdl_gall_curr_list", []) or [])
         total_pages = __builtin__.max(1,(len(curr) - 1) // 6 + 1) if curr else 1
         progress = getattr(store, "sdl_gall_progress", 0)
         items = [
@@ -1604,7 +1852,7 @@ init -90 python:
             Jump("main_menu_7dl"),
         ]))
         return ESMode("sdl_gall_photos", screen, items,
-            u"Gallery photos, page {0} of {1}.".format(page, total_pages),
+            u"Gallery.",
             escape=[
                 Hide("sdl_gall_photos", transition=Dissolve(0.2)),
                 Hide("sdl_gall_bw", transition=Dissolve(0.2)),
@@ -1710,6 +1958,18 @@ init -90 python:
     # ------------------------------------------------------------------
 
     ES_SCREEN_MODES = [
+        # 7 Days of Summer prompts that sit on top of everything else.
+        ("alt_load_warning", es_items_7dl_save_warning),
+        ("alt_incompatible_release", es_items_7dl_save_warning),
+        ("alt_changelog", es_items_alt_changelog),
+        ("alt_700", es_items_alt_700),
+        ("alt_timer", es_items_alt_timer),
+        ("alt_day0_charsel", es_items_charsel),
+        ("alt_day0_charsel_am", lambda s: es_items_charsel(s, True)),
+        ("dlc_actsel", es_items_dlc_actsel),
+        ("alt_un_cl_selector", es_items_un_cl_selector),
+        ("music_7dl", es_items_music_7dl),
+        ("sdl_achvlist_main", es_items_achievements_7dl),
         # 7DL Stories — list overlays first; do NOT register stories_exit_7dl
         # (it is always shown as a transient and would hide Moments/Road).
         ("road_fanfics_1_7dl", es_items_road_fanfics_1_7dl),
@@ -1724,6 +1984,7 @@ init -90 python:
         ("unreleased_3_7dl", es_items_unreleased_3_7dl),
         ("alt_need_binder", es_items_alt_need_binder),
         ("road_main_7dl", es_items_road_main_7dl),
+        ("sdl_replays_main", es_items_replays_7dl),
         ("stories_main_7dl", es_items_stories_main_7dl),
         # 7DL Gallery — photos/filter only (main/exit auto-show and steal focus)
         ("sdl_gall_filter", es_items_sdl_gall_filter),
@@ -1739,7 +2000,6 @@ init -90 python:
         ("alt_save", es_items_alt_save),
         ("alt_load", es_items_alt_load),
         ("alt_quit", es_items_alt_quit),
-        ("alt_changelog", es_items_alt_changelog),
         ("alt_copy_saves", es_items_alt_copy_saves),
         ("alt_confirm_reload", es_items_alt_confirm_reload),
         ("menu_7dl", es_items_menu_7dl),
@@ -1934,7 +2194,7 @@ init -90 python:
                 ((pygame.K_LCTRL, pygame.K_RCTRL), pygame.KMOD_CTRL),
                 ((pygame.K_LSHIFT, pygame.K_RSHIFT), pygame.KMOD_SHIFT),
                 ((pygame.K_LGUI, pygame.K_RGUI), pygame.KMOD_META)):
-            if any(pressed[k] for k in keys):
+            if __builtin__.any(pressed[k] for k in keys):
                 held |= mods & flag
         if held != mods & (pygame.KMOD_ALT | pygame.KMOD_CTRL | pygame.KMOD_SHIFT | pygame.KMOD_META):
             pygame.key.set_mods((mods & ~(pygame.KMOD_ALT | pygame.KMOD_CTRL | pygame.KMOD_SHIFT | pygame.KMOD_META)) | held)

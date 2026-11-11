@@ -31,7 +31,7 @@ init -100 python:
         try:
             if isinstance(msg, unicode):
                 msg = msg.encode("utf-8")
-            with open(ES_LOG_PATH, "a") as f:
+            with __builtin__.open(ES_LOG_PATH, "a") as f:
                 f.write("[{0}] {1}\n".format(time.strftime("%Y-%m-%d %H:%M:%S"), msg))
         except Exception:
             pass
@@ -186,7 +186,7 @@ init -100 python:
             if text is None:
                 return u""
             if not isinstance(text, unicode):
-                text = unicode(str(text), "utf-8", "replace")
+                text = unicode(__builtin__.str(text), "utf-8", "replace")
             text = re.sub(r"\{(w|p|nw|fast)[^}]*\}", u" ", text)
             text = re.sub(r"\{[^}]*\}", u"", text)
             text = text.replace(u"~", u" ")
@@ -335,15 +335,17 @@ init -100 python:
 
     ES_DESCRIPTIONS = {}
 
-    ES_SILENT_IMAGES = set([
+    ES_SILENT_IMAGES = __builtin__.set([
         "bg black", "black", "white", "red", "anim blink_up", "anim blink_down",
         "backdrop_back", "backdrop_new", "day_num",
     ])
 
+    ES_ONSCREEN_TEXT_TAGS = __builtin__.set(["alt_credits", "alt_credits_jap", "alt_letter"])
+
     def es_image_key(name):
         if name is None:
             return None
-        if isinstance(name, basestring):
+        if isinstance(name, __builtin__.basestring):
             parts = tuple(name.split())
         else:
             parts = tuple(name)
@@ -390,6 +392,17 @@ init -100 python:
             message = es.clean(getattr(store, "urhere", u""))
             if message:
                 es.announce(u"Scrawled over and over, in many hands: " + message)
+            return
+        if parts[0] in ES_ONSCREEN_TEXT_TAGS and len(parts) > 1:
+            # 7 Days of Summer shows narration as on-screen text:
+            # show alt_credits "text".
+            # The text arrives as written in the script, quotes and all.
+            message = u" ".join(unicode(p) for p in parts[1:]).strip()
+            if len(message) > 1 and message[0] == message[-1] and message[0] in u"\"'":
+                message = message[1:-1]
+            message = es.clean(message.replace(u"\\n", u" "))
+            if message:
+                es.announce(message)
             return
         key = u" ".join(parts)
         text = ES_DESCRIPTIONS.get(key) or ES_DESCRIPTIONS.get(parts[0])
@@ -570,7 +583,7 @@ init -100 python:
             # A line of only dots or dashes is a wordless pause; say so,
             # since screen readers often skip punctuation.
             what = u"ellipsis"
-        who = es.clean(who) if isinstance(who, basestring) else u""
+        who = es.clean(who) if isinstance(who, __builtin__.basestring) else u""
         if who and persistent.es_a11y_names:
             return u"{0}: {1}".format(who, what)
         return what
@@ -703,9 +716,9 @@ init 999 python:
                     _preferences.volumes[mixer] = default
             saved = persistent.on_save_timeofday
             if saved:
-                for slot, entry in list(saved.items()):
+                for slot, entry in __builtin__.list(saved.items()):
                     try:
-                        if any(not isinstance(v, (int, float)) for v in entry[3:6]):
+                        if __builtin__.any(not isinstance(v, (int, float)) for v in entry[3:6]):
                             del saved[slot]
                     except Exception:
                         del saved[slot]
@@ -742,6 +755,29 @@ init 999 python:
             return es_orig_new_chapter(day_number, chapter_name, *args, **kwargs)
 
         store.new_chapter = es_new_chapter
+
+    # 7 Days of Summer draws its own title cards: alt_chapter() for days of
+    # the main story and dlc_chapter() for chapters of its bonus story.
+    def es_wrap_7dl_chapter(fname, word):
+        orig = getattr(store, fname, None)
+        if orig is None or getattr(orig, "_es_original", None) is not None:
+            return
+        def wrapper(number, chapter_name=u"", *args, **kwargs):
+            try:
+                title = u"{0} {1}.".format(word, number)
+                name = es.clean(chapter_name)
+                if name:
+                    title += u" " + name
+                es.present = {}
+                es.announce(title)
+            except Exception:
+                es_log_exc(fname)
+            return orig(number, chapter_name, *args, **kwargs)
+        wrapper._es_original = orig
+        setattr(store, fname, wrapper)
+
+    es_wrap_7dl_chapter("alt_chapter", u"Day")
+    es_wrap_7dl_chapter("dlc_chapter", u"Chapter")
 
     # Ending achievements are shown as images on the overlay layer.
     ES_ENDING_NAMES = {
