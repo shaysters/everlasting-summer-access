@@ -85,6 +85,9 @@ Notes:
 - the Stories section, with the fan fiction, old endings and unreleased material that come with it
 - its gallery
 - the card game in its tournament
+- its opening choice of hero, its bonus story's act choice, its notices and save warnings, the music player and the Moments replays
+
+Its backgrounds and illustrations are described too, like the original game's. Most of 7 Days of Summer's story is in Russian; the mod reads it as written, so you'll need a Russian voice or a translation add-on for your screen reader.
 
 Follow the routes guide that 7 Days of Summer provides. Its routes are meant to be played in a set order, because the story follows a chronology: later routes build on events and reveals from earlier ones. Playing them out of order can spoil the story or leave parts of it confusing.
 
