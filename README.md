@@ -50,7 +50,7 @@ An earlier version of this mod used Tolk. The two can't be installed together. T
 | Up and Down | Story | Review earlier lines, one at a time. |
 | Home and End | Story | Jump to the oldest or newest line in the review. |
 | R | Story | Repeat the last line. |
-| D | Story | Describe the scene, and say who is in view. |
+| D | Story | Describe the scene, and say who is in view. In 7 Days of Summer's card tournament, also read the tournament table. |
 | W | Story | Say who is in view. |
 | L | Story | Open the text log. |
 | Tab | Story | Turn skipping on or off. Hold Ctrl to skip only while held. |
@@ -78,16 +78,26 @@ Notes:
 
 ## 7 Days of Summer
 
-7 Days of Summer (7DS:LA) is a large fan-made mod for Everlasting Summer, available on the Steam Workshop. If you have it installed, this mod reads its menus too:
+7 Days of Summer (7DS:LA) is a large fan-made mod for Everlasting Summer, free on the Steam Workshop: <https://steamcommunity.com/sharedfiles/filedetails/?id=441054187>. Subscribe to it on Steam and it loads with the game; open it from the game's mods list. This mod supports all of it:
 
-- its main menu, settings, contacts and media
-- its save and load, game menu and quit prompts
-- the Stories section, with the fan fiction, old endings and unreleased material that come with it
-- its gallery
-- the card game in its tournament
-- its opening choice of hero, its bonus story's act choice, its notices and save warnings, the music player and the Moments replays
+- its main menu, settings, contacts, media, save and load, game menu and quit prompts
+- the opening choice of hero (Loki, Herc or Drisch, and later the Major), and the bonus story's choice of act
+- the opening video, described line by line, with Skip
+- its notices and changelog, read in full, and the warning when you load a save from an older version
+- the Stories section: the Moments replays, and the Old Road's fan fiction, old endings and unreleased material
+- the endings list (its achievements): every route and ending by name, which you have, what a locked one needs, and Enter to replay one you've reached, including the settings it asks for first
+- the gallery and the music player
+- day and chapter titles, lines it shows as text on screen (read as "Caption:"), and the "Achievement unlocked" banner when you reach an ending
+- descriptions of all its backgrounds and illustrations, like the original game's
 
-Its backgrounds and illustrations are described too, like the original game's. Most of 7 Days of Summer's story is in Russian; the mod reads it as written, so you'll need a Russian voice or a translation add-on for your screen reader.
+Its minigames:
+
+- **Card tournament:** played just like the original game's card game. While the tournament table is on screen, press D to hear who plays whom and who won.
+- **Rock, paper, scissors:** plays itself; the mod says what you and your opponent threw.
+- **Rhyming with Miku:** an ordinary choice menu.
+- **Quick-time event** (in one of the Old Road's old endings): press Enter or 7 when told. The mod gives you 8 seconds instead of the original 2.
+
+Most of 7 Days of Summer's story is in Russian. The mod reads it as written, so you'll need a Russian voice or a translation add-on for your screen reader. The mod's own menus and descriptions are in English.
 
 Follow the routes guide that 7 Days of Summer provides. Its routes are meant to be played in a set order, because the story follows a chronology: later routes build on events and reveals from earlier ones. Playing them out of order can spoil the story or leave parts of it confusing.
 

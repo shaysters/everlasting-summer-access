@@ -1334,7 +1334,8 @@ init -90 python:
         return ESMode("un_cl_selector_7dl", screen, items, u"Lena-classic. Choose where to start.")
 
     def es_items_alt_timer(screen):
-        items = [ESItem(u"Return to the camp! Press 7 or Enter now.", [Hide("alt_timer"), Return()])]
+        items = [ESItem(u"Quick-time event: return to the camp! Press Enter or 7 within {0} seconds.".format(int(ES_7DL_QTE_SECONDS)),
+            [Hide("alt_timer"), Return()])]
         return ESMode("alt_timer", screen, items, u"Quick!")
 
     def es_items_replays_7dl(screen):
@@ -1351,10 +1352,277 @@ init -90 python:
         return ESMode("music_7dl", screen, items, u"Music player.",
             escape=Hide("music_7dl", transition=Dissolve(0.2)))
 
+    # 7 Days of Summer's ending list ("achievements"). Its captions are text
+    # pictures in Russian; these are their English names.
+    ES_7DL_ACHV_TEXT = {
+        "sdl_achv_7dl_route": u"7DL route", "sdl_achv_xxx_route": u"Special route",
+        "sdl_achv_smt_route": u"Other", "sdl_achv_need_route": u"This route isn't finished yet",
+        "sdl_achv_info_end": u"Requires the ending", "sdl_achv_info_or": u"or",
+        "sdl_achv_info_puz": u"Requires completing the heart puzzle",
+        "sdl_achv_char_label_loki": u"Loki", "sdl_achv_char_label_herc": u"Herc",
+        "sdl_achv_char_label_dr": u"Drisch",
+        "sdl_achv_dlc": u"DLC", "sdl_achv_dlc_act1": u"Alisa's ending",
+        "sdl_achv_me_7dl": u"Main story", "sdl_achv_mi_7dl": u"Main story", "sdl_achv_dv_7dl": u"Main story",
+        "sdl_achv_sl_7dl": u"Main story", "sdl_achv_un_7dl": u"Main story", "sdl_achv_mt_7dl": u"Main story",
+        "sdl_achv_us_7dl": u"Main story",
+        "sdl_achv_me_ntr": u"Loner", "sdl_achv_mi_djt": u"Radio host", "sdl_achv_dv_djt": u"Radio host",
+        "sdl_achv_sl_clt": u"Classic", "sdl_achv_un_fzd": u"Friend zone", "sdl_achv_va_smt": u"Other",
+        "sdl_achv_dv_DR_exc": u"Drisch's exclusive ending", "sdl_achv_dv_HE_exc": u"Herc's exclusive ending",
+        "sdl_achv_dv_LO_exc": u"Loki's exclusive ending", "sdl_achv_dv_bad": u"Bad ending",
+        "sdl_achv_dv_good": u"Good ending", "sdl_achv_dv_good_RF": u"Good ending, modern Russia",
+        "sdl_achv_dv_good_US": u"Good ending, USSR", "sdl_achv_dv_neu": u"Neutral ending",
+        "sdl_achv_dv_rej": u"Rejection ending", "sdl_achv_dv_rej_RF": u"Rejection ending, modern Russia",
+        "sdl_achv_dv_rej_US": u"Rejection ending, USSR", "sdl_achv_dv_shard": u"Shard of memory",
+        "sdl_achv_dv_tran": u"Transit ending", "sdl_achv_dv_true": u"True ending",
+        "sdl_achv_me_dr_exc": u"Drisch's exclusive ending", "sdl_achv_me_dr_true": u"Drisch's true ending",
+        "sdl_achv_me_good": u"Good ending", "sdl_achv_me_herc_exc": u"Herc's exclusive ending",
+        "sdl_achv_me_herc_true": u"Herc's true ending", "sdl_achv_me_loki_exc": u"Loki's exclusive ending",
+        "sdl_achv_me_loki_true": u"Loki's true ending", "sdl_achv_me_neu": u"Neutral ending",
+        "sdl_achv_me_shard": u"Shard of memory", "sdl_achv_me_true": u"True ending",
+        "sdl_achv_mi_DR_exc": u"Drisch's exclusive ending", "sdl_achv_mi_HE_exc": u"Herc's exclusive ending",
+        "sdl_achv_mi_LO_exc": u"Loki's exclusive ending", "sdl_achv_mi_bad": u"Bad ending",
+        "sdl_achv_mi_good": u"Good ending", "sdl_achv_mi_good_IN": u"Good ending, abroad",
+        "sdl_achv_mi_good_RF": u"Good ending, modern Russia", "sdl_achv_mi_good_US": u"Good ending, USSR",
+        "sdl_achv_mi_rej": u"Rejection ending", "sdl_achv_mi_shard": u"Shard of memory",
+        "sdl_achv_mi_true": u"True ending",
+        "sdl_achv_mt_bad": u"Bad ending", "sdl_achv_mt_good": u"Good ending",
+        "sdl_achv_mt_herc_exc": u"Herc's exclusive ending", "sdl_achv_mt_neu": u"Neutral ending",
+        "sdl_achv_mt_shard": u"Shard of memory", "sdl_achv_mt_true": u"True ending",
+        "sdl_achv_sl_DR_good": u"Drisch's good ending", "sdl_achv_sl_HE_good": u"Herc's good ending",
+        "sdl_achv_sl_LO_exc": u"Loki's exclusive ending", "sdl_achv_sl_LO_good": u"Loki's good ending",
+        "sdl_achv_sl_LO_neu": u"Loki's neutral ending", "sdl_achv_sl_LO_rej": u"Loki's rejection ending",
+        "sdl_achv_sl_bad": u"Bad ending", "sdl_achv_sl_good_IN": u"Good ending, abroad",
+        "sdl_achv_sl_good_RF": u"Good ending, modern Russia", "sdl_achv_sl_good_US": u"Good ending, USSR",
+        "sdl_achv_sl_rej_IN": u"Rejection ending, abroad", "sdl_achv_sl_rej_RF": u"Rejection ending, modern Russia",
+        "sdl_achv_sl_shard": u"Shard of memory", "sdl_achv_sl_true_IN": u"True ending, abroad",
+        "sdl_achv_un_bad": u"Bad ending", "sdl_achv_un_bad_IN": u"Bad ending, abroad",
+        "sdl_achv_un_bad_POST": u"Alisa's postscript", "sdl_achv_un_good_IN": u"Good ending, abroad",
+        "sdl_achv_un_good_RF": u"Good ending, modern Russia", "sdl_achv_un_good_US": u"Good ending, USSR",
+        "sdl_achv_un_neu": u"Neutral ending", "sdl_achv_un_rej": u"Rejection ending",
+        "sdl_achv_un_shard": u"Shard of memory", "sdl_achv_un_true_IN": u"True ending, abroad",
+        "sdl_achv_us_bad": u"Bad ending", "sdl_achv_us_good": u"Good ending",
+        "sdl_achv_us_good_IN": u"Good ending, the Sparks", "sdl_achv_us_shard": u"Shard of memory",
+        "sdl_achv_us_tran_mi": u"Transit ending to Miku", "sdl_achv_us_tran_un": u"Transit ending to Lena",
+        "sdl_achv_us_true": u"True ending", "sdl_achv_us_true_IN": u"Abroad ending, the Sparks",
+        "sdl_achv_va_certif": u"Certificate of honour!", "sdl_achv_va_club27": u"Club 27",
+        "sdl_achv_va_diary": u"Read all three parts of Olga's diary", "sdl_achv_va_drunk": u"Roughed up...",
+        "sdl_achv_va_kat": u"Catapult ending", "sdl_achv_va_lost": u"Wasted",
+        "sdl_achv_va_qte": u"Reflex and IQ test", "sdl_achv_va_tran": u"Glug, glug...",
+        "sdl_achv_va_victim": u"Let us remember him...",
+    }
+
+    ES_7DL_SECTIONS = [("mi", u"Miku"), ("dv", u"Alisa"), ("sl", u"Slavya"), ("un", u"Lena"),
+        ("mt", u"Olga Dmitrievna"), ("us", u"Ulyana"), ("me", u"Semyon"), ("va", u"Miscellaneous")]
+
+    def es_7dl_image_text(name):
+        # English name of a caption picture, or failing that its own text.
+        if not name:
+            return u""
+        if name in ES_7DL_ACHV_TEXT:
+            return ES_7DL_ACHV_TEXT[name]
+        parts = []
+        try:
+            d = renpy.display.image.images.get(tuple(name.split()))
+            def visit(x):
+                if isinstance(x, renpy.text.text.Text):
+                    parts.append(u"".join(t for t in x.text if isinstance(t, __builtin__.basestring)))
+            d.visit_all(visit)
+        except Exception:
+            pass
+        return es.clean(u" ".join(parts)) or name
+
+    def es_7dl_ending_name(achv):
+        # The caption plus the title on its "achievement unlocked" banner.
+        name = es_7dl_image_text(achv.get_text())
+        banner = ES_DESCRIPTIONS.get(achv.get_icon() or u"", u"")
+        if banner.startswith(u"Achievement banner: "):
+            name += u", titled " + banner[len(u"Achievement banner: "):].rstrip(u".")
+        return name
+
+    def es_7dl_requirements(achv):
+        out = []
+        for pre in achv.get_prerequisites() or []:
+            if pre.check_conditions():
+                continue
+            names = [es_7dl_ending_name(a) for a in (pre.get_achievements() or [])]
+            text = es_7dl_image_text(pre.get_text())
+            if names:
+                text += u": " + u" or ".join(names)
+            out.append(text)
+        return u"; ".join(out)
+
+    def es_7dl_route_counts(route):
+        got = total = 0
+        for a in route.get_achv_arr():
+            total += 1
+            if getattr(persistent, a.get_persistent()):
+                got += 1
+        return got, total
+
+    def es_7dl_set_route(engine, section, route):
+        engine.set_cur_section(section)
+        engine.run_func_out()
+        engine.set_cur_route(route)
+        engine.run_func_in()
+
+    def es_7dl_char_adjust(engine):
+        def adjust(delta):
+            n = engine.get_chars_amount()
+            if n < 2:
+                return
+            engine.cur_char_idx = (engine.get_cur_char_idx() + delta) % n
+            renpy.restart_interaction()
+            es.ui(es_7dl_char_label(engine))
+        return adjust
+
+    def es_7dl_char_label(engine):
+        try:
+            name = es_7dl_image_text(engine.get_cur_char().get_text()) or u"any hero"
+        except Exception:
+            name = u"any hero"
+        return u"Showing endings for: {0}. Left and right arrows change hero.".format(name)
+
     def es_items_achievements_7dl(screen):
-        items = [ESItem(u"The achievement list is pictures only, so it can't be read yet.")]
-        items += es_scraped_items(es_screen("sdl_achv_section_selector") or screen)
-        return ESMode("achievements_7dl", screen, items, u"Achievements.")
+        engine = es_scope(screen, "engine") or getattr(store, "sdl_achv_engine", None)
+        items = []
+        exit_items = [i for i in es_scraped_items(es_screen("sdl_achv_section_selector") or screen)
+            if i.text() == ES_ACTION_JUMP_LABELS["main_menu_7dl"]]
+        route = engine.get_cur_route() if engine else None
+        default = getattr(store, "sdl_achv_route_default", None)
+        if engine is None or route is None or route is default:
+            progress = getattr(store, "sdl_achv_progress", 0)
+            items.append(ESItem(u"Endings unlocked: {0}%.".format(progress)))
+            for sec, name in ES_7DL_SECTIONS:
+                for r in store.sdl_achv_section_to_routes.get(sec, []):
+                    got, total = es_7dl_route_counts(r)
+                    label = u"{0}: {1}, {2}. {3} of {4} endings.".format(
+                        name, es_7dl_image_text(r.get_title()), es_7dl_image_text(r.get_typology()), got, total)
+                    if r.get_status() != "completed":
+                        label += u" " + ES_7DL_ACHV_TEXT["sdl_achv_need_route"] + u"."
+                    items.append(ESItem(label, Function(es_7dl_set_route, engine, sec, r)))
+            items += exit_items
+            return ESMode("achievements_7dl_routes", screen, items,
+                u"Endings list. Choose a route to see its endings.")
+
+        sec_name = dict(ES_7DL_SECTIONS).get(engine.get_cur_section(), u"")
+        title = u"{0}: {1}".format(sec_name, es_7dl_image_text(route.get_title())).strip(u": ")
+        try:
+            mask = engine.get_cur_char().get_char_mask()
+        except Exception:
+            mask = 15
+        if engine.get_chars_amount() > 1:
+            items.append(ESItem(lambda: es_7dl_char_label(engine), adjust=es_7dl_char_adjust(engine)))
+        hidden = getattr(store, "sdl_achv_hidden", [])
+        scope_char = None
+        try:
+            scope_char = engine.get_cur_char().get_variable()
+        except Exception:
+            pass
+        for achv in route.get_achv_arr():
+            got = getattr(persistent, achv.get_persistent())
+            if achv.get_persistent() in hidden and not got:
+                continue
+            name = u"Caption: " + es_7dl_ending_name(achv)
+            if not achv.check_mask(mask):
+                items.append(ESItem(name + u". Not available with this hero."))
+                continue
+            if got:
+                label = name + u". Unlocked."
+                action = None
+                if achv.get_replay() is not None:
+                    label += u" Enter replays it."
+                    action = [Replay("sdl_replay", scope=sdl_add_to_dict(achv.get_replay().get_scope(), "cur_char", scope_char), locked=False),
+                              Play("music", get_playing_7dl(), fadein=5)]
+                items.append(ESItem(label, action))
+                if achv.get_postscriptum() is not None and persistent.alt_binder:
+                    items.append(ESItem(name + u". Postscript. Enter plays it.",
+                        [Replay("sdl_replay", scope=sdl_add_to_dict(achv.get_postscriptum().get_scope(), "cur_char", scope_char), locked=False),
+                         Play("music", get_playing_7dl(), fadein=5)]))
+            else:
+                req = es_7dl_requirements(achv)
+                items.append(ESItem(name + u". Locked." + (u" " + req + u"." if req else u"")))
+        items.append(ESItem(u"Back to the list of routes", Function(engine.set_cur_section, None)))
+        items += exit_items
+        return ESMode("achievements_7dl_endings", screen, items, title + u". Endings.",
+            escape=Function(engine.set_cur_section, None))
+
+    # Before some replays 7 Days of Summer asks how earlier choices went:
+    # flags, points, one-of-several settings and short lists. The names are
+    # read as the mod writes them.
+    def es_replay_var_item(var):
+        kind = var.get_type()
+        text = es.clean(var.get_text())
+        if kind == 0:
+            return ESItem(lambda: u"{0}: {1}".format(text, u"yes" if var.get_cur_value() else u"no"),
+                Function(var.toggle_value), adjust=lambda d: var.toggle_value())
+        if kind == 1:
+            def adjust(d):
+                if d > 0 and var.get_cur_value() < var.get_range():
+                    var.cur_val_inc()
+                elif d < 0 and var.get_cur_value() > 0:
+                    var.cur_val_dec()
+                es.ui(__builtin__.str(var.get_cur_value()))
+            return ESItem(lambda: u"{0}: {1} of {2}. Left and right arrows change it.".format(
+                text, var.get_cur_value(), var.get_range()), adjust=adjust)
+        if kind == 2:
+            def adjust(d):
+                if d > 0 and var.get_cur_val_idx() < var.get_values_amount() - 1:
+                    var.cur_val_idx_inc()
+                elif d < 0 and var.get_cur_val_idx() > 0:
+                    var.cur_val_idx_dec()
+                es.ui(es.clean(var.get_cur_descr()))
+            return ESItem(lambda: u"{0}: {1}. Left and right arrows change it.".format(
+                text, es.clean(var.get_cur_descr())), adjust=adjust)
+        return None
+
+    def es_items_replay_vars(screen):
+        items = []
+        for var in es_scope(screen, "vars") or []:
+            if var.get_type() == 3:
+                for value, label in var.get_values():
+                    def toggle(var=var, value=value):
+                        if value in var.get_cur_value():
+                            var.del_value(value)
+                        elif not var.is_full():
+                            var.add_value(value)
+                        else:
+                            es.ui(u"Already full. Clear another choice first.")
+                    items.append(ESItem(renpy.curry(lambda var, value, label: u"{0}, {1}: {2}".format(
+                        es.clean(var.get_text()), es.clean(label),
+                        u"chosen" if value in var.get_cur_value() else u"not chosen"))(var, value, label),
+                        Function(toggle)))
+                continue
+            if var is getattr(store, "sdl_var_i_me_neu_answ", None) and not persistent.alt_binder:
+                continue
+            item = es_replay_var_item(var)
+            if item is not None:
+                items.append(item)
+        items.append(ESItem(u"Start the replay", [Hide("sdl_replay_vars", transition=Dissolve(0.5)), Return()]))
+        return ESMode("replay_vars_7dl", screen, items,
+            u"Replay settings: set how earlier choices went, then choose Start the replay.")
+
+    # The animated opening of 7 Days of Summer, described from its frames.
+    ES_7DL_OPENING = [
+        u"Night. A young man sits alone at a computer in a dark room, his face lit by the screen.",
+        u"A phone alarm rings at 19:00, then a call comes in.",
+        u"He pulls on a coat at home under a poster, then stands by a railing on a snowy embankment, city lights behind him.",
+        u"He rides a dark, empty bus. Figures in the snow, a man in a long coat, car lights in the night.",
+        u"In a bright office, a man in black points a gun at a bearded man.",
+        u"A hand reaches out in the dark.",
+        u"Summer at the camp: Alisa plays an acoustic guitar on a log; she smiles, eyes closed, a twig in her mouth.",
+        u"Lena chews on a paintbrush; later she sits on the steps of a cabin at night, and a jetty stretches into dark water.",
+        u"Slavya stands in blazing sunlight, then smiles while a pioneer walks past behind her.",
+        u"Miku closes her eyes, her teal twin tails falling over her shoulders.",
+        u"On a red bus, the young man looks up wide-eyed. Through the window, the camp gates with their pioneer statue.",
+        u"He stands in the open bus doorway, then faces you, calm.",
+        u"In grey, an empty bus stop and an old bus among the trees, and the title: 7 Days of Summer.",
+    ]
+
+    def es_items_movie_7dl(screen):
+        items = [ESItem(t) for t in ES_7DL_OPENING]
+        items.append(ESItem(u"Skip the video", Return(0)))
+        return ESMode("movie_7dl", screen, items,
+            u"7 Days of Summer opening video, about two minutes, with a song. Arrow down to read what it shows. Enter on Skip skips it.")
 
     def es_items_alt_700(screen):
         items = es_notice_lines(es_scope(screen, "alt_text")) + [ESItem(u"OK", Return(True))]
@@ -1964,6 +2232,8 @@ init -90 python:
         ("alt_changelog", es_items_alt_changelog),
         ("alt_700", es_items_alt_700),
         ("alt_timer", es_items_alt_timer),
+        ("sdl_replay_vars", es_items_replay_vars),
+        ("alt_movie_screen", es_items_movie_7dl),
         ("alt_day0_charsel", es_items_charsel),
         ("alt_day0_charsel_am", lambda s: es_items_charsel(s, True)),
         ("dlc_actsel", es_items_dlc_actsel),
@@ -2032,13 +2302,24 @@ init -90 python:
         heading, items = es_choice_items(es_scope(nvl, "items"))
         return ESMode("choice", nvl, items, u" ".join(heading) or u"Choose.")
 
+    # Screens that change what they show without being replaced.
+    ES_IDENTITY_EXTRA = {
+        "sdl_achvlist_main": lambda s: id(store.sdl_achv_engine.get_cur_route()),
+    }
+
     def es_detect():
         # Returns (identity, builder) without building the item list, so the
         # periodic check stays cheap.
         for name, builder in ES_SCREEN_MODES:
             screen = es_screen(name)
             if screen is not None:
-                return (name, id(screen)), renpy.curry(builder)(screen)
+                extra = None
+                if name in ES_IDENTITY_EXTRA:
+                    try:
+                        extra = ES_IDENTITY_EXTRA[name](screen)
+                    except Exception:
+                        pass
+                return (name, id(screen), extra), renpy.curry(builder)(screen)
 
         nvl = es_screen("nvl")
         if nvl is not None and es_scope(nvl, "items"):
@@ -2322,3 +2603,17 @@ screen es_a11y_global():
         key "K_d" action Function(es_describe_scene, _update_screens=False)
         key "K_w" action Function(es_who, _update_screens=False)
         key "K_l" action ShowMenu("text_history_screen")
+
+# 7 Days of Summer's quick-time event gives two seconds to press 7, too little
+# for a screen reader to finish the prompt. This screen takes its place with
+# the same outcome and more time.
+screen es_7dl_alt_timer():
+    modal True
+    key "7" action [Hide("alt_timer"), Return()]
+    key "K_KP7" action [Hide("alt_timer"), Return()]
+    timer ES_7DL_QTE_SECONDS action [Hide("alt_timer"), SetVariable("alt_day_catapult", True), Return()]
+
+init 1000 python:
+    ES_7DL_QTE_SECONDS = 8.0
+    if ("alt_timer", None) in renpy.display.screen.screens:
+        renpy.display.screen.screens[("alt_timer", None)] = renpy.display.screen.screens[("es_7dl_alt_timer", None)]

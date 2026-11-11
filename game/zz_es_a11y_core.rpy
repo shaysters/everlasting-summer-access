@@ -402,7 +402,7 @@ init -100 python:
                 message = message[1:-1]
             message = es.clean(message.replace(u"\\n", u" "))
             if message:
-                es.announce(message)
+                es.announce(u"Caption: " + message)
             return
         key = u" ".join(parts)
         text = ES_DESCRIPTIONS.get(key) or ES_DESCRIPTIONS.get(parts[0])
@@ -553,7 +553,62 @@ init -100 python:
         else:
             parts.append(u"The screen is dark.")
         parts.append(es_who_is_here())
+        extra = es_7dl_tournament_summary()
+        if extra:
+            parts.append(extra)
         es.ui(u" ".join(parts))
+
+    # 7 Days of Summer's card tournament draws its bracket as portraits only.
+    ES_7DL_GAMBLERS = {"me": u"you", "un": u"Lena", "sl": u"Slavya", "dv": u"Alisa",
+        "mi": u"Miku", "us": u"Ulyana", "sh": u"Shurik", "mz": u"Zhenya"}
+
+    def es_7dl_tournament_summary():
+        try:
+            state = getattr(store, "alt_tournament_state", None)
+            first = getattr(store, "alt_day2_gamblers_1_tour", None)
+            if not state or not first or not renpy.showing("alt_tournament_bg", layer="underlay"):
+                return u""
+            def name(g):
+                return ES_7DL_GAMBLERS.get(getattr(g, "take", None), getattr(g, "take", u"?"))
+            def rounds(players, title):
+                out = []
+                for i in __builtin__.range(0, len(players) - 1, 2):
+                    a, b = players[i], players[i + 1]
+                    line = u"{0} against {1}".format(name(a), name(b))
+                    won = [p for p in (a, b) if getattr(p, "winner", False)]
+                    if won:
+                        line += u", {0} won".format(name(won[0]))
+                    out.append(line)
+                return title + u": " + u"; ".join(out) + u"."
+            parts = [u"Tournament table.", rounds(first[0:8], u"First round")]
+            semi = getattr(store, "alt_day2_gamblers_semifinal", None)
+            if semi and state not in ("1_round_start", "1_round_end"):
+                parts.append(rounds(semi[0:4], u"Semifinal"))
+            final = getattr(store, "alt_day2_gamblers_final", None)
+            if final and state in ("final_start", "final_end"):
+                parts.append(rounds(final[0:2], u"Final"))
+            return u" ".join(parts)
+        except Exception:
+            es_log_exc("es_7dl_tournament_summary")
+            return u""
+
+    es_7dl_table_seen = [None]
+
+    def es_7dl_table_check():
+        try:
+            if getattr(store, "alt_tournament_state", None) is None:
+                return
+            key = None
+            if renpy.showing("alt_tournament_bg", layer="underlay"):
+                key = store.alt_tournament_state
+            if key != es_7dl_table_seen[0]:
+                es_7dl_table_seen[0] = key
+                if key is not None:
+                    es.announce(u"The tournament table is on screen. Press D to hear who plays whom.")
+        except Exception:
+            es_log_exc("es_7dl_table_check")
+
+    config.start_interact_callbacks.append(es_7dl_table_check)
 
     # ------------------------------------------------------------------
     # Dialogue reading. Patched in at the point where Ren'Py shows a line,
