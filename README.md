@@ -78,10 +78,17 @@ Notes:
 
 ## 7 Days of Summer
 
-7 Days of Summer (7DS:LA) is a large fan-made mod for Everlasting Summer, free on the Steam Workshop: <https://steamcommunity.com/sharedfiles/filedetails/?id=441054187>. Subscribe to it on Steam and it loads with the game; open it from the game's mods list. This mod supports all of it:
+7 Days of Summer (7DS:LA) is a large fan-made mod for Everlasting Summer, free on the Steam Workshop. It comes in two versions, and this mod supports both:
+
+- **English:** <https://steamcommunity.com/sharedfiles/filedetails/?id=3010995687>. A community translation of the whole story, apart from some bonus content in the Old Road section (fan fiction and cut scenes). This is the one to get if you play in English.
+- **Russian (the original):** <https://steamcommunity.com/sharedfiles/filedetails/?id=441054187>. A little newer, with a bonus story the English version doesn't have yet.
+
+Subscribe to only one of them. The two can't be installed together: the game shows an error and won't start. If you switch, unsubscribe from the other first. Subscribe on Steam and it loads with the game; open it from the game's mods list.
+
+This mod covers all of it:
 
 - its main menu, settings, contacts, media, save and load, game menu and quit prompts
-- the opening choice of hero (Loki, Herc or Drisch, and later the Major), and the bonus story's choice of act
+- the opening choice of hero (Loki, Herc or Drisch, and later the Major), and in the Russian version the bonus story's choice of act
 - the opening video, described line by line, with Skip
 - its notices and changelog, read in full, and the warning when you load a save from an older version
 - the Stories section: the Moments replays, and the Old Road's fan fiction, old endings and unreleased material
@@ -97,7 +104,7 @@ Its minigames:
 - **Rhyming with Miku:** an ordinary choice menu.
 - **Quick-time event** (in one of the Old Road's old endings): press Enter or 7 when told. The mod gives you 8 seconds instead of the original 2.
 
-Most of 7 Days of Summer's story is in Russian. The mod reads it as written, so you'll need a Russian voice or a translation add-on for your screen reader. The mod's own menus and descriptions are in English.
+In the Russian version the story is in Russian, and the mod reads it as written, so you'll need a Russian voice or a translation add-on for your screen reader. The mod's own menus, endings list and descriptions are in English with either version.
 
 Follow the routes guide that 7 Days of Summer provides. Its routes are meant to be played in a set order, because the story follows a chronology: later routes build on events and reveals from earlier ones. Playing them out of order can spoil the story or leave parts of it confusing.
 

@@ -1418,8 +1418,6 @@ init -90 python:
         # English name of a caption picture, or failing that its own text.
         if not name:
             return u""
-        if name in ES_7DL_ACHV_TEXT:
-            return ES_7DL_ACHV_TEXT[name]
         parts = []
         try:
             d = renpy.display.image.images.get(tuple(name.split()))
@@ -1429,7 +1427,12 @@ init -90 python:
             d.visit_all(visit)
         except Exception:
             pass
-        return es.clean(u" ".join(parts)) or name
+        own = es.clean(u" ".join(parts))
+        # The English translation of the mod has its own English text; the
+        # Russian original gets ours.
+        if own and not re.search(u"[Ѐ-ӿ]", own):
+            return own
+        return ES_7DL_ACHV_TEXT.get(name) or own or name
 
     def es_7dl_ending_name(achv):
         # The caption plus the title on its "achievement unlocked" banner.

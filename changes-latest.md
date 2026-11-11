@@ -13,6 +13,7 @@ Run **EverlastingSummerAccessInstaller.exe** to install or update. Close the gam
 - 7 Days of Summer minigames: the card tournament table is read with D, rock-paper-scissors throws are announced, and the quick-time event gives 8 seconds instead of 2.
 - 7 Days of Summer's opening video is described, with Skip.
 - Text the game shows on screen as captions is now read starting with "Caption:".
+- Supports both versions of 7 Days of Summer: the English translation (Workshop item 3010995687) and the Russian original. With the English one, the endings list and ending banners use the translators' own English titles.
 - Works around 7 Days of Summer replacing some of Python's built-in names, which would otherwise break the save and load menus.
 - The README has a new 7 Days of Summer section, including why its routes guide matters.
 

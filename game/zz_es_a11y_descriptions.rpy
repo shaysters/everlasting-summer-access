@@ -1579,3 +1579,138 @@ init -80 python:
         u"miku_scissor": u"Your opponent throws scissors.",
         u"timer_anim": u"",
     })
+
+    # Pictures only in the English translation of 7 Days of Summer.
+    ES_DESCRIPTIONS.update({
+        u"cg d1_end_of_day_7dl": u"A muscular young man lies in bed in the dark, the blanket half off, eyes shut.",
+        u"cg d6_me_mt_diary": u"A blurred view of Olga Dmitrievna sitting on a cabin step at night, reading a notebook.",
+        u"cg d7_leaving_no_sh_7dl": u"A group of pioneers stands together in bright light: Slavya, Olga Dmitrievna in a white cap, Alisa, Ulyana, Lena, Electronik and Semyon.",
+        u"cg d7_sl_gonna_be_ok_7dl": u"A man in a long coat lies spread-eagled in the snow at night, blood beside him, an empty box nearby and city lights behind.",
+    })
+
+    # The English translation of 7 Days of Summer redraws most banners with
+    # its own English titles; these replace the ones above when it is the
+    # version installed.
+    ES_7DL_BANNERS_EN = {
+        u"acm_logo_dv_7dl_bad": u"Achievement banner: No Way.",
+        u"acm_logo_dv_7dl_good_rf": u"Achievement banner: More Than Life.",
+        u"acm_logo_dv_7dl_good_ussr": u"Achievement banner: Bright Present.",
+        u"acm_logo_dv_7dl_loki_exc": u"Achievement banner: Tulpa.",
+        u"acm_logo_dv_7dl_rej_rf": u"Achievement banner: I'll Take You Home.",
+        u"acm_logo_dv_7dl_rej_ussr": u"Achievement banner: Till the Very End.",
+        u"acm_logo_dv_7dl_shard": u"Achievement banner: Most Loyal Fan.",
+        u"acm_logo_dv_7dl_tran_mt": u"Achievement banner: Drunk & Battered.",
+        u"acm_logo_dv_7dl_tran_un": u"Achievement banner: Meet Me There.",
+        u"acm_logo_dv_dj_bad": u"Achievement banner: \"Yellow Arrow\".",
+        u"acm_logo_dv_dj_dr_exc": u"Achievement banner: Deadline.",
+        u"acm_logo_dv_dj_good": u"Achievement banner: Sid & Nancy.",
+        u"acm_logo_dv_dj_herc_exc": u"Achievement banner: Something Greater.",
+        u"acm_logo_dv_dj_loki_exc": u"Achievement banner: Alisa Forever.",
+        u"acm_logo_dv_dj_neu": u"Achievement banner: Breathe With Me.",
+        u"acm_logo_dv_dj_rej": u"Achievement banner: Eternal Spring.",
+        u"acm_logo_dv_dj_true": u"Achievement banner: The Other Side.",
+        u"acm_logo_me_7dl_good": u"Achievement banner: Someone's Past.",
+        u"acm_logo_me_7dl_neutral": u"Achievement banner: Fatalist.",
+        u"acm_logo_me_7dl_true": u"Achievement banner: 7 Days of Summer.",
+        u"acm_logo_me_neu_bad": u"Achievement banner: Inevitability.",
+        u"acm_logo_me_neu_dr_exc": u"Achievement banner: Sorry. Farewell.",
+        u"acm_logo_me_neu_dr_neu": u"Achievement banner: Come to Papa!",
+        u"acm_logo_me_neu_dr_true": u"Achievement banner: You Inside Me.",
+        u"acm_logo_me_neu_herc_exc": u"Achievement banner: Gray-Doomed.",
+        u"acm_logo_me_neu_herc_true": u"Achievement banner: Step by Step.",
+        u"acm_logo_me_neu_loki_exc": u"Achievement banner: Ultimate Justice.",
+        u"acm_logo_me_neu_loki_neu": u"Achievement banner: Man of the Past.",
+        u"acm_logo_me_neu_loki_true": u"Achievement banner: My Reality.",
+        u"acm_logo_me_neu_shard": u"Achievement banner: Different.",
+        u"acm_logo_mi_7dl_bad_human": u"Achievement banner: Exemplar.",
+        u"acm_logo_mi_7dl_bad_star": u"Achievement banner: Damned Processor.",
+        u"acm_logo_mi_7dl_dr_exc": u"Achievement banner: May I?",
+        u"acm_logo_mi_7dl_good_human": u"Achievement banner: Strange Dreams.",
+        u"acm_logo_mi_7dl_good_star": u"Achievement banner: Sparkle.",
+        u"acm_logo_mi_7dl_good_ussr": u"Achievement banner: Won't Get Tired.",
+        u"acm_logo_mi_7dl_herc_exc": u"Achievement banner: Unlike Me.",
+        u"acm_logo_mi_7dl_loki_exc": u"Achievement banner: Will You Go with Me?",
+        u"acm_logo_mi_7dl_neu_human": u"Achievement banner: Won't Get Tired.",
+        u"acm_logo_mi_7dl_shard": u"Achievement banner: All That I Can Do.",
+        u"acm_logo_mi_dj_bad": u"Achievement banner: Happy New Year!",
+        u"acm_logo_mi_dj_good": u"Achievement banner: Be Sure to Wait for Me.",
+        u"acm_logo_mi_dj_good_rf": u"Achievement banner: Don't Even Dream of It.",
+        u"acm_logo_mi_dj_rej": u"Achievement banner: Bounce.",
+        u"acm_logo_mi_dj_true": u"Achievement banner: My Miku.",
+        u"acm_logo_mt_7dl_bad": u"Achievement banner: Better Not Wake Up.",
+        u"acm_logo_mt_7dl_good": u"Achievement banner: Miracle Named Olga.",
+        u"acm_logo_mt_7dl_herc_exc": u"Achievement banner: Undeserving?",
+        u"acm_logo_mt_7dl_neu": u"Achievement banner: Happily Ever After?",
+        u"acm_logo_mt_7dl_shard": u"Achievement banner: Face of the Past.",
+        u"acm_logo_mt_7dl_true": u"Achievement banner: By Right of Memory.",
+        u"acm_logo_sl_7dl_bad": u"Achievement banner: Missed!",
+        u"acm_logo_sl_7dl_dr_good": u"Achievement banner: Not in Vain?",
+        u"acm_logo_sl_7dl_dr_good2": u"Achievement banner: There's More to Come!",
+        u"acm_logo_sl_7dl_good_rf": u"Achievement banner: From Dawn Till Dusk.",
+        u"acm_logo_sl_7dl_herc_good": u"Achievement banner: Neon and Darkness.",
+        u"acm_logo_sl_7dl_herc_neu": u"Achievement banner: The Only Right Path.",
+        u"acm_logo_sl_7dl_loki_good": u"Achievement banner: Radio \"Void\".",
+        u"acm_logo_sl_7dl_loki_neu": u"Achievement banner: I'm Home!",
+        u"acm_logo_sl_7dl_loki_rej": u"Achievement banner: All or Nothing.",
+        u"acm_logo_sl_7dl_shard": u"Achievement banner: Inner Demons.",
+        u"acm_logo_sl_cl_bad": u"Achievement banner: Yours Not Truly.",
+        u"acm_logo_sl_cl_good_rf": u"Achievement banner: Plus-Minus 30 Minutes.",
+        u"acm_logo_sl_cl_good_rf2": u"Achievement banner: Something Right.",
+        u"acm_logo_sl_cl_good_ussr": u"Achievement banner: Plus-Minus 30 Minutes.",
+        u"acm_logo_sl_cl_int_bad": u"Achievement banner: The Price of Loneliness.",
+        u"acm_logo_sl_cl_int_good": u"Achievement banner: Call Me \"Honey\".",
+        u"acm_logo_sl_cl_int_rej": u"Achievement banner: We Will Be... Happy.",
+        u"acm_logo_sl_cl_int_true": u"Achievement banner: Everything's Okay... Right?",
+        u"acm_logo_sl_cl_loki_exc": u"Achievement banner: All Will Be Okay.",
+        u"acm_logo_sl_cl_rej": u"Achievement banner: Time to Go Home.",
+        u"acm_logo_sl_cl_rej_rf": u"Achievement banner: At the Very Same Place.",
+        u"acm_logo_un_7dl_bad": u"Achievement banner: Dream On.",
+        u"acm_logo_un_7dl_good_rf": u"Achievement banner: Whole Life Ahead!",
+        u"acm_logo_un_7dl_good_ussr": u"Achievement banner: Unneeded.",
+        u"acm_logo_un_7dl_rej": u"Achievement banner: Will You Go with Me?",
+        u"acm_logo_un_7dl_shard": u"Achievement banner: Burning Bridges.",
+        u"acm_logo_un_7dl_true_tran": u"Achievement banner: Will You Go with Me?",
+        u"acm_logo_un_fz_bad": u"Achievement banner: Into the Void.",
+        u"acm_logo_un_fz_bad_post": u"Achievement banner: Into the Unknown.",
+        u"acm_logo_un_fz_good": u"Achievement banner: As Long as I'm Needed.",
+        u"acm_logo_un_fz_neu": u"Achievement banner: Groundhog Day.",
+        u"acm_logo_un_fz_rj": u"Achievement banner: Hell Inside My Head.",
+        u"acm_logo_un_fz_rr_bad": u"Achievement banner: Lost Shadows.",
+        u"acm_logo_un_fz_rr_good": u"Achievement banner: Nobody Never...",
+        u"acm_logo_un_fz_rr_true": u"Achievement banner: Will-o'-the-Wisps.",
+        u"acm_logo_us_7dl_bad": u"Achievement banner: Become Real.",
+        u"acm_logo_us_7dl_good": u"Achievement banner: Syomische!!!",
+        u"acm_logo_us_7dl_px_good": u"Achievement banner: Melt-Melt...",
+        u"acm_logo_us_7dl_px_true": u"Achievement banner: Summer Will Be... Everlasting.",
+        u"acm_logo_us_7dl_shard": u"Achievement banner: Best Regards.",
+        u"acm_logo_us_7dl_tran_mi": u"Achievement banner: You're Coming with Me.",
+        u"acm_logo_us_7dl_tran_un": u"Achievement banner: Not a Chance.",
+        u"acm_logo_us_7dl_true": u"Achievement banner: This Can't Be.",
+        u"acm_logo_us_px_good": u"Achievement banner: Melt-Melt...",
+        u"acm_logo_us_px_true": u"Achievement banner: Summer Will Be... Everlasting.",
+        u"acm_logo_va_certif": u"Achievement banner: Be Ready!",
+        u"acm_logo_va_club27": u"Achievement banner: Club 27.",
+        u"acm_logo_va_deep": u"Achievement banner: To Hell with the Depths.",
+        u"acm_logo_va_diary": u"Achievement banner: An Old Acquaintance.",
+        u"acm_logo_va_drunk": u"Achievement banner: Drunk & Battered.",
+        u"acm_logo_va_lamp": u"Achievement banner: Shattered Coziness.",
+        u"acm_logo_va_lost": u"Achievement banner: Plays VN, Loses.",
+    }
+
+init 1001 python:
+    # The English translation draws the endings list's captions in English.
+    def es_7dl_is_english():
+        try:
+            d = renpy.display.image.images.get(("sdl_achv_me_7dl",))
+            parts = []
+            def visit(x):
+                if isinstance(x, renpy.text.text.Text):
+                    parts.append(u"".join(t for t in x.text if isinstance(t, __builtin__.basestring)))
+            d.visit_all(visit)
+            text = u"".join(parts)
+            return bool(text) and not re.search(u"[\u0400-\u04ff]", text)
+        except Exception:
+            return False
+
+    if es_7dl_is_english():
+        ES_DESCRIPTIONS.update(ES_7DL_BANNERS_EN)
