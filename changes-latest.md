@@ -1,21 +1,10 @@
-# Everlasting Summer Access 0.10.0
+# Everlasting Summer Access 0.10.1
 
 Run **EverlastingSummerAccessInstaller.exe** to install or update. Close the game first. You can still install by hand from the zip; see the README.
 
-## Changes since 0.9.2
+## Changes since 0.10.0
 
-- Support for the 7 Days of Summer (7DS:LA) mod, added by Douglas G: its main menu, settings, contacts, media, save and load, game menu and quit prompts, the Stories section (fan fiction, old endings and unreleased material) and its gallery are all read.
-- The card game is also read in 7 Days of Summer's tournament, where your opponent can be one of several kinds of player.
-- 7 Days of Summer fixes and additions: the opening hero choice (Loki, Herc, Drisch and the hidden Major), the bonus story's act choice, its first-run and update notices (now read in full, and OK closes them), the warning when loading a save from an older version, the music player, the Moments replays, day and chapter titles, and lines it shows as on-screen text.
-- Written descriptions of 7 Days of Summer's backgrounds and illustrations: about 800 pictures, covering all 1,000 or so it shows.
-- 7 Days of Summer's endings list (its achievements) is fully readable: routes, endings by name, which you have, what locked ones need, and replaying them, including the replay settings screen.
-- The "Achievement unlocked" banners 7 Days of Summer shows at its endings are read, with their titles in English.
-- 7 Days of Summer minigames: the card tournament table is read with D, rock-paper-scissors throws are announced, and the quick-time event gives 8 seconds instead of 2.
-- 7 Days of Summer's opening video is described, with Skip.
-- Text the game shows on screen as captions is now read starting with "Caption:".
-- Supports both versions of 7 Days of Summer: the English translation (Workshop item 3010995687) and the Russian original. With the English one, the endings list and ending banners use the translators' own English titles.
-- Works around 7 Days of Summer replacing some of Python's built-in names, which would otherwise break the save and load menus.
-- The README has a new 7 Days of Summer section, including why its routes guide matters.
+- 7 Days of Summer's camp maps work: the places you can go are listed, with who is there and any heart-puzzle piece, and Enter takes you there and carries on the story. Before, its maps weren't recognised at all. Thanks to Douglas G for finding and reporting this.
 
 
 ## Links

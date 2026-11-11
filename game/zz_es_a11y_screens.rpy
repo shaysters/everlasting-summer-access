@@ -788,6 +788,70 @@ init -90 python:
                 items.append(ESItem(es_zone_label(name, data), Function(store.map.zoneclick, name)))
         return ESMode("map", ("map", id(zones)), items, u"Camp map. Choose where to go.")
 
+    # 7 Days of Summer has two maps of its own (store names ending _alt1 and
+    # _alt2), each with its own places, people and way of going there.
+    ES_7DL_ZONE_NAMES = {
+        "me_mt_house": u"Olga Dmitrievna's cabin, where you live", "estrade": u"Stage",
+        "music_club": u"Music club", "square": u"Square", "dining_hall": u"Dining hall",
+        "sport_area": u"Sports area", "beach": u"Beach", "boat_station": u"Boat dock",
+        "clubs": u"Clubs building", "library": u"Library", "medic_house": u"Infirmary",
+        "camp_entrance": u"Camp gates", "forest": u"Forest",
+        "un_mi_house": u"Lena and Miku's cabin", "sl_mz_house": u"Slavya and Zhenya's cabin",
+        "el_sh_house": u"Electronik and Shurik's cabin", "dv_us_house": u"Alisa and Ulyana's cabin",
+        "shed": u"Storehouse", "store_house": u"Storehouse", "admin_house": u"Administration building",
+        "old_house": u"Old camp building", "wash_house": u"Bathhouse", "cape": u"The cape",
+        "sandpit": u"Quarry", "islaone": u"Near island", "islatwo": u"Long island", "lake": u"Lake",
+        "meadow": u"Meadow", "campfire": u"Campfire clearing",
+        "sports_hall": u"Gym and football pitch", "volleyball": u"Volleyball court",
+        "court": u"Tennis court", "kyber_club": u"Cybernetics club",
+        "secret_up": u"Secret place, north", "secret_down": u"Secret place, south",
+    }
+    # The second map labels these two differently from their names.
+    ES_7DL_ZONE_NAMES_ALT2 = {"camp_entrance": u"Parking area by the gates", "forest": u"Washstands"}
+
+    ES_7DL_ZONE_ORDER = ["me_mt_house", "square", "dining_hall", "music_club", "clubs", "library",
+        "medic_house", "admin_house", "estrade", "sport_area", "beach", "boat_station", "camp_entrance"]
+
+    ES_7DL_CHIBI = {"?": u"someone is here", "heart1": u"a grey heart-puzzle piece is here",
+        "heart2": u"a coloured heart-puzzle piece is here", "dv_us": u"Alisa and Ulyana are here",
+        "me": u"a figure with a paper bag over its head is here"}
+
+    def es_7dl_active_map():
+        for n in (1, 2):
+            if getattr(store, "map_enabled_alt%d" % n, False):
+                return n
+        return None
+
+    def es_7dl_zone_label(n, name, data):
+        base = name[:-len("_alt%d" % n)]
+        label = (n == 2 and ES_7DL_ZONE_NAMES_ALT2.get(base)) or ES_7DL_ZONE_NAMES.get(base) \
+            or base.replace("_", " ").capitalize()
+        chibi = data.get("chibi")
+        if chibi is not None:
+            for who, img in getattr(store, "map_chibi_7dl", {}).items():
+                if img is chibi or img == chibi:
+                    if who in ES_7DL_CHIBI:
+                        label += u", " + ES_7DL_CHIBI[who]
+                    else:
+                        label += u", {0} is here".format(es_char_name(who))
+                    break
+        if data.get("been_here"):
+            label += u", visited"
+        return label
+
+    def es_items_map_7dl(n):
+        zones = getattr(store, "global_zones_alt%d" % n, {}) or {}
+        themap = getattr(store, "map_alt%d" % n)
+        suffix = "_alt%d" % n
+        order = [z + suffix for z in ES_7DL_ZONE_ORDER]
+        names = [z for z in order if z in zones] + __builtin__.sorted(z for z in zones if z not in order)
+        items = []
+        for name in names:
+            data = zones[name]
+            if data.get("avaliable"):
+                items.append(ESItem(es_7dl_zone_label(n, name, data), Function(themap.zoneclick, name)))
+        return ESMode("map", ("map7dl", n), items, u"Camp map. Choose where to go.")
+
     # Card game ----------------------------------------------------------
 
     ES_SUITS = {"2ch": u"2ch", "ussr": u"USSR", "utan": u"Utan", "uvao": u"UVAO"}
@@ -2327,6 +2391,11 @@ init -90 python:
         nvl = es_screen("nvl")
         if nvl is not None and es_scope(nvl, "items"):
             return ("nvl_choice", id(nvl)), renpy.curry(es_items_nvl_choice)(nvl)
+
+        n7 = es_7dl_active_map()
+        if n7 is not None:
+            zones = getattr(store, "global_zones_alt%d" % n7, None)
+            return ("map7dl", n7, id(zones)), renpy.curry(es_items_map_7dl)(n7)
 
         if getattr(store, "map_enabled", False):
             return ("map", id(getattr(store, "global_zones", None))), es_items_map

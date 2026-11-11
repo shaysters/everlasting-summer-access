@@ -93,6 +93,7 @@ This mod covers all of it:
 - its notices and changelog, read in full, and the warning when you load a save from an older version
 - the Stories section: the Moments replays, and the Old Road's fan fiction, old endings and unreleased material
 - the endings list (its achievements): every route and ending by name, which you have, what a locked one needs, and Enter to replay one you've reached, including the settings it asks for first
+- its camp maps: the places you can go, who is there, and Enter to go there
 - the gallery and the music player
 - day and chapter titles, lines it shows as text on screen (read as "Caption:"), and the "Achievement unlocked" banner when you reach an ending
 - descriptions of all its backgrounds and illustrations, like the original game's

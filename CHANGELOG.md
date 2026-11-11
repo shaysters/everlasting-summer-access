@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.1
+
+- 7 Days of Summer's camp maps work: the places you can go are listed, with who is there and any heart-puzzle piece, and Enter takes you there and carries on the story. Before, its maps weren't recognised at all. Thanks to Douglas G for finding and reporting this.
+
 ## 0.10.0
 
 - Support for the 7 Days of Summer (7DS:LA) mod, added by Douglas G: its main menu, settings, contacts, media, save and load, game menu and quit prompts, the Stories section (fan fiction, old endings and unreleased material) and its gallery are all read.
