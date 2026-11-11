@@ -40,7 +40,7 @@ init -100 python:
         es_log("EXCEPTION in {0}:\n{1}".format(context, _es_traceback.format_exc()))
 
     es_log("=" * 60)
-    ES_VERSION = "0.9.2"
+    ES_VERSION = "0.10.0"
     es_log("Everlasting Summer accessibility mod {0} loading.".format(ES_VERSION))
 
     # ------------------------------------------------------------------

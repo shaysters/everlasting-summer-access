@@ -666,10 +666,15 @@ init -90 python:
             if not getattr(store, "cards_my", None):
                 return False
             state = store.cards_state
-            if state in ("me_defend_1", "me_defend_2", "me_select_1", "me_select_2", "results"):
+            # Player-interactive phases of the stock ES card game and the
+            # 7DL tournament (same state names; rivals may be CardGameRivalUs,
+            # CardGameRivalWiseUsual, CardGameRivalWiseLikeUS, etc.).
+            if state in ("me_defend_1", "me_defend_2", "me_select_1", "me_select_2",
+                         "rival_select", "results"):
                 return True
-            if state == "rival_select" and isinstance(store.rival, CardGameRivalUs):
-                return True
+            # After a match the state stays "win", "draw" or "fail" and the
+            # cards are never cleared, so those states must not count, or the
+            # card view would stay on through the rest of the story.
         except Exception:
             pass
         return False
@@ -838,10 +843,907 @@ init -90 python:
             u"Everlasting Summer. Choose a language with the arrow keys and press Enter.", start=1)
 
     # ------------------------------------------------------------------
+    # 7 Days of Summer (7DL / 7DS:LA) menus
+    # ------------------------------------------------------------------
+
+    def es_items_menu_7dl(screen):
+        items = []
+        pivo = getattr(persistent, "pivo_default_7dl", False)
+
+        if not pivo:
+            # Menu when 7DL is NOT the default main menu (starts the mod)
+            items.append(ESItem(u"Start 7DS:LA", [
+                Hide("menu_7dl", transition=Dissolve(0.2)),
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Stop('music', fadeout=2),
+                SetField(sdl_mus_engine, "is_active", False),
+                Jump("start_7dl")
+            ]))
+            items.append(ESItem(u"Settings", Show("settings_7dl", transition=Dissolve(0.2), embedded=False)))
+            items.append(ESItem(u"Achievements", [
+                Hide("menu_7dl", transition=Dissolve(0.2)),
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Jump("sdl_achvlist_main")
+            ]))
+            items.append(ESItem(u"Contacts", Show("contacts_7dl", transition=Dissolve(0.2))))
+            items.append(ESItem(u"Stories", [
+                Hide("menu_7dl", transition=Dissolve(0.2)),
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Jump("alt_stories_start")
+            ]))
+            items.append(ESItem(u"Media", Show("media_7dl", transition=Dissolve(0.2))))
+            items.append(ESItem(u"Main menu (Everlasting Summer)", [
+                Hide("menu_7dl", transition=Dissolve(0.2)),
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Function(alt_exit),
+                MainMenu(confirm=False)
+            ]))
+        else:
+            # Menu when 7DL IS the default main menu
+            items.append(ESItem(u"New game", [
+                Hide("menu_7dl", transition=Dissolve(0.2)),
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Stop('music', fadeout=2),
+                SetField(sdl_mus_engine, "is_active", False),
+                Start()
+            ]))
+            items.append(ESItem(u"Load game", [
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Show("alt_load")
+            ]))
+            items.append(ESItem(u"Settings", Show("settings_7dl", transition=Dissolve(0.2), embedded=False)))
+            items.append(ESItem(u"Achievements", [
+                Hide("menu_7dl", transition=Dissolve(0.2)),
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Jump("sdl_achvlist_main")
+            ]))
+            items.append(ESItem(u"Contacts", Show("contacts_7dl", transition=Dissolve(0.2))))
+            items.append(ESItem(u"Stories", [
+                Hide("menu_7dl", transition=Dissolve(0.2)),
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Jump("alt_stories_start")
+            ]))
+            items.append(ESItem(u"Media", Show("media_7dl", transition=Dissolve(0.2))))
+            items.append(ESItem(u"Quit", [
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Show("alt_quit", transition=Dissolve(0.2))
+            ]))
+
+        if getattr(persistent, "pivo_completed", False):
+            items.append(ESItem(u"Statistics", [
+                Hide("menu_7dl", transition=Dissolve(0.2)),
+                Hide("settings_7dl", transition=Dissolve(0.2)),
+                Hide("contacts_7dl", transition=Dissolve(0.2)),
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Jump("alt_7dl_stats")
+            ]))
+
+        items.append(ESItem(u"Changelog", Show("alt_changelog", Dissolve(0.2), alt_changelog_text)))
+
+        return ESMode("menu_7dl", screen, items, u"7 Days of Summer. Main menu.")
+
+    def es_items_settings_7dl(screen):
+        items = []
+        embedded = es_scope(screen, "embedded", False)
+
+        if getattr(persistent, "pivo_default_7dl", False) and not embedded:
+            items.append(ESItem(u"ES settings", [
+                Hide("settings_description_7dl", transition=Dissolve(0.2)),
+                Show("alt_preferences", transition=Dissolve(0.2))
+            ]))
+
+        # Toggle: Start with 7DS:LA
+        if not getattr(persistent, "pivo_default_7dl", False):
+            items.append(ESItem(u"Start with 7DS:LA: off. Enter to enable.", [
+                SetField(persistent, 'pivo_default_7dl', True),
+                Show("alt_copy_saves", Dissolve(0.2),
+                     "In this mode, 7DS:LA has its own save slots. Copy mod saves from ES slots to 7DS:LA slots? The saves will be copied sequentially to empty slots.",
+                     alt_saves_copy_in)
+            ]))
+        else:
+            items.append(ESItem(u"Start with 7DS:LA: on. Enter to disable.", [
+                SetField(persistent, 'pivo_default_7dl', False),
+                Show("alt_copy_saves", Dissolve(0.2),
+                     "Copy mod saves from 7DS:LA slots to ES slots? The saves will be copied sequentially to empty slots.",
+                     alt_saves_copy_out)
+            ]))
+
+        # Hentai content
+        if not getattr(persistent, "hentai_graphics_7dl", False):
+            items.append(ESItem(u"Hentai-content: off. Enter to enable.", [
+                SetField(persistent, 'hentai_graphics_7dl', True),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+        else:
+            items.append(ESItem(u"Hentai-content: on. Enter to disable.", [
+                SetField(persistent, 'hentai_graphics_7dl', False),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+
+        # LP widget
+        if not getattr(persistent, "lp_widget_7dl", False):
+            items.append(ESItem(u"Widget (LP): off. Enter to enable.", [
+                SetField(persistent, 'lp_widget_7dl', True),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+        else:
+            items.append(ESItem(u"Widget (LP): on. Enter to disable.", [
+                SetField(persistent, 'lp_widget_7dl', False),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+
+        # Music widget
+        if not getattr(persistent, "music_widget_7dl", False):
+            items.append(ESItem(u"Widget (music): off. Enter to enable.", [
+                SetField(persistent, 'music_widget_7dl', True),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+        else:
+            items.append(ESItem(u"Widget (music): on. Enter to disable.", [
+                SetField(persistent, 'music_widget_7dl', False),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+
+        # Thoughts style
+        if not getattr(persistent, "thoughts_tilde_7dl", False):
+            items.append(ESItem(u"Thoughts: quotations. Enter to switch to tilde.", [
+                SetField(persistent, 'thoughts_tilde_7dl', True),
+                Function(alt_thoughts_tilde_update),
+                Function(reload_names),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+        else:
+            items.append(ESItem(u"Thoughts: tilde. Enter to switch to quotations.", [
+                SetField(persistent, 'thoughts_tilde_7dl', False),
+                Function(alt_thoughts_tilde_update),
+                Function(reload_names),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+
+        # Splash screen
+        if not getattr(persistent, "chapter_off_7dl", False):
+            items.append(ESItem(u"Splashscreen: on. Enter to disable.", [
+                SetField(persistent, 'chapter_off_7dl', True),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+        else:
+            items.append(ESItem(u"Splashscreen: off. Enter to enable.", [
+                SetField(persistent, 'chapter_off_7dl', False),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+
+        # Achievements emotions
+        if not getattr(persistent, "achv_sprite_emo_7dl", False):
+            items.append(ESItem(u"Emotions (Achievelist): off. Enter to enable.", [
+                SetField(persistent, 'achv_sprite_emo_7dl', True),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+        else:
+            items.append(ESItem(u"Emotions (Achievelist): on. Enter to disable.", [
+                SetField(persistent, 'achv_sprite_emo_7dl', False),
+                Hide("settings_description_7dl", transition=Dissolve(0.2))
+            ]))
+
+        # Streamer mode
+        if not getattr(persistent, "stream_mode_7dl", False):
+            items.append(ESItem(u"Streamer mode: off. Enter to enable (restarts game).", [
+                SetField(persistent, 'stream_mode_7dl', True),
+                Show("alt_confirm_reload", Dissolve(0.5), False)
+            ]))
+        else:
+            items.append(ESItem(u"Streamer mode: on. Enter to disable (restarts game).", [
+                SetField(persistent, 'stream_mode_7dl', False),
+                Show("alt_confirm_reload", Dissolve(0.5), False)
+            ]))
+
+        items.append(ESItem(u"Back", Hide("settings_7dl", transition=Dissolve(0.2))))
+
+        return ESMode("settings_7dl", screen, items,
+            u"7DS:LA settings. Enter toggles options.",
+            escape=Hide("settings_7dl", transition=Dissolve(0.2)))
+
+    def es_items_alt_preferences(screen):
+        # Reuse standard preferences list and add 7DL-specific toggle when applicable
+        base = es_items_preferences(screen)
+        items = list(base.items)
+
+        if getattr(persistent, "pivo_default_7dl", False):
+            if not getattr(store, "use_settings_7dl", False):
+                items.insert(0, ESItem(u"Show 7DS:LA menu", SetVariable("use_settings_7dl", True)))
+            else:
+                items.insert(0, ESItem(u"Hide 7DS:LA menu", SetVariable("use_settings_7dl", False)))
+
+        # Ensure Back closes alt_preferences properly
+        for i, item in enumerate(items):
+            label = item.label() if callable(item.label) else item.label
+            if label == u"Back":
+                items[i] = ESItem(u"Back", [Hide("alt_preferences"), Return()])
+                break
+
+        return ESMode("alt_preferences", screen, items,
+            u"Settings (7DS:LA). Left and right arrows change values, Enter toggles.",
+            escape=[Hide("alt_preferences"), Return()])
+
+    def es_items_alt_game_menu(screen):
+        items = [
+            ESItem(u"Return to the story", Return()),
+            ESItem(u"Save game", ShowMenu("save")),
+            ESItem(u"Load game", ShowMenu("load")),
+            ESItem(u"Settings", [ShowMenu("preferences"), Hide("alt_game_menu_selector")]),
+            ESItem(u"Main menu", [Function(alt_exit), MainMenu()]),
+            ESItem(u"Quit", ShowMenu("quit")),
+        ]
+        return ESMode("alt_game_menu_selector", screen, items, u"Game menu (7DS:LA).", escape=Return())
+
+    def es_items_alt_save(screen):
+        return es_items_file(screen, True)
+
+    def es_items_alt_load(screen):
+        return es_items_file(screen, False)
+
+    def es_items_alt_quit(screen):
+        items = [
+            ESItem(u"Yes, quit", Quit(confirm=False)),
+            ESItem(u"No, stay", Hide("alt_quit", transition=Dissolve(0.2))),
+        ]
+        return ESMode("alt_quit", screen, items, u"Quit the game?",
+                      escape=Hide("alt_quit", transition=Dissolve(0.2)))
+
+    def es_items_alt_changelog(screen):
+        items = [ESItem(u"OK", Hide("alt_changelog", transition=Dissolve(0.5)))]
+        return ESMode("alt_changelog", screen, items, u"Changelog.",
+                      escape=Hide("alt_changelog", transition=Dissolve(0.5)))
+
+    def es_items_alt_copy_saves(screen):
+        fnkt = es_scope(screen, "fnkt")
+        items = [
+            ESItem(u"Yes", [
+                Hide("alt_copy_saves", Dissolve(0.5)),
+                Function(fnkt) if fnkt is not None else NullAction(),
+                Show("alt_confirm_reload", Dissolve(0.5), True)
+            ]),
+            ESItem(u"No", [
+                Hide("alt_copy_saves", Dissolve(0.5)),
+                Show("alt_confirm_reload", Dissolve(0.5), False)
+            ]),
+        ]
+        return ESMode("alt_copy_saves", screen, items, u"Copy saves?",
+                      escape=Hide("alt_copy_saves", Dissolve(0.5)))
+
+    def es_items_alt_confirm_reload(screen):
+        items = [ESItem(u"OK", [Function(renpy.music.stop), Function(renpy.utter_restart)])]
+        return ESMode("alt_confirm_reload", screen, items, u"Game will be restarted.",
+                      escape=[Function(renpy.music.stop), Function(renpy.utter_restart)])
+
+    def es_items_contacts_7dl(screen):
+        items = [
+            ESItem(u"Boosty", OpenURL("https://boosty.to/7dlla")),
+            ESItem(u"VKontakte", OpenURL("https://vk.com/bl_7dl")),
+            ESItem(u"Telegram", OpenURL("https://t.me/sevendaysofbeer")),
+            ESItem(u"Discord", OpenURL("https://discord.com/invite/qd8drECDHp")),
+            ESItem(u"YouTube", OpenURL("https://www.youtube.com/@7dlLA")),
+            ESItem(u"Steam Workshop", OpenURL("https://steamcommunity.com/sharedfiles/filedetails/?id=441054187")),
+            ESItem(u"Back", Hide("contacts_7dl", transition=Dissolve(0.2))),
+        ]
+        return ESMode("contacts_7dl", screen, items, u"Contacts.",
+                      escape=Hide("contacts_7dl", transition=Dissolve(0.2)))
+
+    def es_items_media_7dl(screen):
+        items = [
+            ESItem(u"Gallery", [
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Hide("menu_7dl", transition=Dissolve(0.2)),
+                Jump("sdl_gall_start")
+            ]),
+            ESItem(u"Music player", [
+                Hide("media_7dl", transition=Dissolve(0.2)),
+                Function(sdl_mus_progress_calc),
+                Show("music_7dl", transition=Dissolve(0.2), default_music=get_menu_track_7dl())
+            ]),
+            ESItem(u"Back", Hide("media_7dl", transition=Dissolve(0.2))),
+        ]
+        return ESMode("media_7dl", screen, items, u"Media.",
+                      escape=Hide("media_7dl", transition=Dissolve(0.2)))
+
+    # ------------------------------------------------------------------
+    # 7DL Stories ("Истории")
+    # ------------------------------------------------------------------
+
+    def es_start_story(label):
+        return [
+            Hide("stories_main_7dl", transition=Dissolve(0.2)),
+            Stop('music', fadeout=1),
+            SetField(sdl_mus_engine, "is_active", False),
+            Start(label) if getattr(persistent, "pivo_default_7dl", False) else Jump(label)
+        ]
+
+    def es_items_stories_main_7dl(screen):
+        mode = getattr(store, "stories_mode_7dl", "") or "moments"
+        items = []
+        if mode != "moments":
+            items.append(ESItem(u"Moments (Memory Forest)", [
+                SetVariable("stories_mode_7dl", "moments"),
+                Hide("stories_main_7dl", transition=Dissolve(0.2)),
+                Jump("alt_stories_start")
+            ]))
+        else:
+            items.append(ESItem(u"Moments (Memory Forest), current section"))
+        if mode != "road":
+            items.append(ESItem(u"The Old Road", [
+                SetVariable("stories_mode_7dl", "road"),
+                Hide("stories_main_7dl", transition=Dissolve(0.2)),
+                Jump("alt_stories_start")
+            ]))
+        else:
+            items.append(ESItem(u"The Old Road, current section"))
+        items.append(ESItem(u"Exit to main menu", [
+            Hide("stories_main_7dl", transition=Dissolve(0.2)),
+            SetVariable("stories_mode_7dl", ""),
+            Jump("main_menu_7dl")
+        ]))
+        intro = u"Stories. Current section: {0}.".format(
+            u"Moments" if mode == "moments" else u"The Old Road" if mode == "road" else u"none")
+        return ESMode("stories_main_7dl", screen, items, intro,
+                      escape=[Hide("stories_main_7dl", transition=Dissolve(0.2)),
+                              SetVariable("stories_mode_7dl", ""), Jump("main_menu_7dl")])
+
+    def es_items_stories_exit_7dl(screen):
+        items = [ESItem(u"Exit to main menu", [
+            Hide("stories_main_7dl", transition=Dissolve(0.2)),
+            SetVariable("stories_mode_7dl", ""),
+            Jump("main_menu_7dl")
+        ])]
+        return ESMode("stories_exit_7dl", screen, items, u"Exit Stories.",
+                      escape=[Hide("stories_main_7dl", transition=Dissolve(0.2)),
+                              SetVariable("stories_mode_7dl", ""), Jump("main_menu_7dl")])
+
+    def es_items_road_main_7dl(screen):
+        items = [
+            ESItem(u"7DS fanfics", ShowTransient("road_fanfics_1_7dl", transition=Dissolve(0.2))),
+        ]
+        if getattr(persistent, "alt_binder", False):
+            items.append(ESItem(u"Old endings", ShowTransient("old_ends_7dl", transition=Dissolve(0.2))))
+            items.append(ESItem(u"Other stuff", ShowTransient("unreleased_1_7dl", transition=Dissolve(0.2))))
+        else:
+            items.append(ESItem(u"Old endings (locked — need heart puzzle)",
+                                Show("alt_need_binder", transition=Dissolve(0.2))))
+            items.append(ESItem(u"Other stuff (locked — need heart puzzle)",
+                                Show("alt_need_binder", transition=Dissolve(0.2))))
+        items.append(ESItem(u"Back to Stories tabs", [
+            SetVariable("stories_mode_7dl", "moments"),
+            Hide("road_main_7dl", transition=Dissolve(0.2)),
+            Hide("stories_main_7dl", transition=Dissolve(0.2)),
+            Jump("alt_stories_start")
+        ]))
+        items.append(ESItem(u"Exit to main menu", [
+            Hide("stories_main_7dl", transition=Dissolve(0.2)),
+            SetVariable("stories_mode_7dl", ""),
+            Jump("main_menu_7dl")
+        ]))
+        return ESMode("road_main_7dl", screen, items,
+            u"The Old Road. Non-canon scenarios.",
+            escape=[SetVariable("stories_mode_7dl", "moments"),
+                    Hide("road_main_7dl", transition=Dissolve(0.2)),
+                    Hide("stories_main_7dl", transition=Dissolve(0.2)),
+                    Jump("alt_stories_start")])
+
+    def es_items_road_main_info_7dl(screen):
+        items = [ESItem(
+            u"The Old Road features non-canon scenarios for 7DS:LA. "
+            u"They were either created with outdated concepts or without established canon."
+        )]
+        return ESMode("road_main_info_7dl", screen, items, u"About The Old Road.")
+
+    def es_items_road_fanfics_1_7dl(screen):
+        items = [
+            ESItem(u"Cat route (Cat team)", es_start_story("alt_day4_start_uvao")),
+            ESItem(u"Blood on the snow (N. Ilyin)", es_start_story("kns_start")),
+            ESItem(u"Colors (G. Polski)", es_start_story("alt_colors_7dl")),
+            ESItem(u"New Year miracle", es_start_story("alt_chudo_novogodnee")),
+            ESItem(u"Rebirth", es_start_story("alt_chudesa_byvayut")),
+            ESItem(u"A piece of soul", es_start_story("alt_bit_of_soul")),
+            ESItem(u"Ghost of a sad girl", es_start_story("the_ghost_of_a_sad_girl")),
+            ESItem(u"Scary stories in the library (F. Lopatin)", es_start_story("fedor_scary_story")),
+            ESItem(u"Camp scary story (ranger)", es_start_story("ranger_scary_story")),
+            ESItem(u"Perfect weapon (Slavya-witch)", es_start_story("ultimate_weapon_sl_vedma")),
+            ESItem(u"Next page", [
+                Hide("road_fanfics_1_7dl", transition=Dissolve(0.2)),
+                ShowTransient("road_fanfics_2_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Back", Hide("road_fanfics_1_7dl", transition=Dissolve(0.2))),
+        ]
+        return ESMode("road_fanfics_1_7dl", screen, items, u"7DS fanfics, page 1.",
+                      escape=Hide("road_fanfics_1_7dl", transition=Dissolve(0.2)))
+
+    def es_items_road_fanfics_2_7dl(screen):
+        items = [
+            ESItem(u"My Sychik (Broni)", es_start_story("sl_sychik")),
+            ESItem(u"Previous page", [
+                Hide("road_fanfics_2_7dl", transition=Dissolve(0.2)),
+                ShowTransient("road_fanfics_1_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Back", Hide("road_fanfics_2_7dl", transition=Dissolve(0.2))),
+        ]
+        return ESMode("road_fanfics_2_7dl", screen, items, u"7DS fanfics, page 2.",
+                      escape=Hide("road_fanfics_2_7dl", transition=Dissolve(0.2)))
+
+    def es_items_old_ends_7dl(screen):
+        items = [
+            ESItem(u"Miku endings", [
+                Hide("old_ends_7dl", transition=Dissolve(0.2)),
+                ShowTransient("old_ends_mi_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Old postscripts", [
+                Hide("old_ends_7dl", transition=Dissolve(0.2)),
+                ShowTransient("old_ends_ps_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Septima endings", [
+                Hide("old_ends_7dl", transition=Dissolve(0.2)),
+                ShowTransient("old_ends_sept_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Other endings", [
+                Hide("old_ends_7dl", transition=Dissolve(0.2)),
+                ShowTransient("old_ends_other_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Back", Hide("old_ends_7dl", transition=Dissolve(0.2))),
+        ]
+        return ESMode("old_ends_7dl", screen, items, u"Old endings.",
+                      escape=Hide("old_ends_7dl", transition=Dissolve(0.2)))
+
+    def es_items_old_ends_mi_7dl(screen):
+        items = [
+            ESItem(u"Declared unfit", es_start_story("alt_day4_mi2sl_transit2")),
+            ESItem(u"Sparkle (old version)", es_start_story("alt_day7_mi_7dl_sparkle")),
+            ESItem(u"May I? (old version)", es_start_story("alt_day7_mi_7dl_vatashi")),
+            ESItem(u"Thank you (old version)", es_start_story("alt_day7_mi_7dl_reject")),
+            ESItem(u"Back", [
+                Hide("old_ends_mi_7dl", transition=Dissolve(0.2)),
+                ShowTransient("old_ends_7dl", transition=Dissolve(0.2))
+            ]),
+        ]
+        return ESMode("old_ends_mi_7dl", screen, items, u"Miku old endings.",
+                      escape=[Hide("old_ends_mi_7dl", transition=Dissolve(0.2)),
+                              ShowTransient("old_ends_7dl", transition=Dissolve(0.2))])
+
+    def es_items_old_ends_ps_7dl(screen):
+        items = [
+            ESItem(u"Miku-DJ postscript", es_start_story("alt_day7_mi_dj_good_rf_ps_old")),
+            ESItem(u"Alisa-7dl postscript", es_start_story("alt_day7_dv_7dl_good_rf_ps_old")),
+            ESItem(u"Lena-7dl postscript", es_start_story("alt_day7_un_7dl_good_rf_ps_old")),
+            ESItem(u"Back", [
+                Hide("old_ends_ps_7dl", transition=Dissolve(0.2)),
+                ShowTransient("old_ends_7dl", transition=Dissolve(0.2))
+            ]),
+        ]
+        return ESMode("old_ends_ps_7dl", screen, items, u"Old postscripts.",
+                      escape=[Hide("old_ends_ps_7dl", transition=Dissolve(0.2)),
+                              ShowTransient("old_ends_7dl", transition=Dissolve(0.2))])
+
+    def es_items_old_ends_sept_7dl(screen):
+        items = [
+            ESItem(u"I will definitely find (Alisa)", es_start_story("alt_day7_dv_7dl_sept")),
+            ESItem(u"No miracles (Slavya)", es_start_story("alt_day7_sl_7dl_sept")),
+            ESItem(u"The search continues (Lena)", es_start_story("alt_day7_un_7dl_sept")),
+            ESItem(u"Gleam of summer (Ulyana)", es_start_story("alt_day7_us_px_sept")),
+            ESItem(u"Strange people (Olga)", es_start_story("alt_day7_mt_7dl_sept")),
+            ESItem(u"Bitter truth (Miku)", es_start_story("alt_day7_mi_7dl_sept")),
+            ESItem(u"Faceless hands (Loner)", es_start_story("alt_day7_me_neu_sept")),
+            ESItem(u"Back", [
+                Hide("old_ends_sept_7dl", transition=Dissolve(0.2)),
+                ShowTransient("old_ends_7dl", transition=Dissolve(0.2))
+            ]),
+        ]
+        return ESMode("old_ends_sept_7dl", screen, items, u"Septima endings.",
+                      escape=[Hide("old_ends_sept_7dl", transition=Dissolve(0.2)),
+                              ShowTransient("old_ends_7dl", transition=Dissolve(0.2))])
+
+    def es_items_old_ends_other_7dl(screen):
+        items = [
+            ESItem(u"Old loner bad ending", es_start_story("alt_day7_me_neu_bad_old")),
+            ESItem(u"Old Loki neutral", es_start_story("alt_day7_me_neu_loki_neu_old")),
+            ESItem(u"Old Drisch neutral", es_start_story("alt_day7_me_neu_dr_neu_old")),
+            ESItem(u"Old Ulyana bad", es_start_story("alt_day7_us_7dl_verses2")),
+            ESItem(u"It was quiet here once (Lena-7dl reject)", es_start_story("alt_day7_un_7dl_rej_old")),
+            ESItem(u"Back", [
+                Hide("old_ends_other_7dl", transition=Dissolve(0.2)),
+                ShowTransient("old_ends_7dl", transition=Dissolve(0.2))
+            ]),
+        ]
+        return ESMode("old_ends_other_7dl", screen, items, u"Other old endings.",
+                      escape=[Hide("old_ends_other_7dl", transition=Dissolve(0.2)),
+                              ShowTransient("old_ends_7dl", transition=Dissolve(0.2))])
+
+    def es_items_unreleased_1_7dl(screen):
+        items = [
+            ESItem(u"Demiurge Trio (2014)", es_start_story("alt_day4_start_neutral_ending")),
+            ESItem(u"Mysterious door (Slavya-CL)", es_start_story("alt_day7_sl_cl_square1")),
+            ESItem(u"Shurik's AI (Slavya-CL)", es_start_story("alt_day7_sl_cl_ps")),
+            ESItem(u"Phone in the old camp (Slavya-7dl)", es_start_story("alt_day4_sl_7dl_old_phone")),
+            ESItem(u"Cherry-berry (old Lena-FZ)", es_start_story("alt_cherry_berry")),
+            ESItem(u"Abyss of anal destruction (Old Loner D.6)", es_start_story("alt_uvao_hentai")),
+            ESItem(u"Old sex scenes (Lena7DS)", es_start_story("alt_day4_un_7dl_hentai_old")),
+            ESItem(u"Date with Miku on the beach", es_start_story("alt_day4_beach_night_mi")),
+            ESItem(u"Next page", [
+                Hide("unreleased_1_7dl", transition=Dissolve(0.2)),
+                ShowTransient("unreleased_2_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Back", Hide("unreleased_1_7dl", transition=Dissolve(0.2))),
+        ]
+        return ESMode("unreleased_1_7dl", screen, items, u"Other stuff, page 1.",
+                      escape=Hide("unreleased_1_7dl", transition=Dissolve(0.2)))
+
+    def es_items_unreleased_2_7dl(screen):
+        items = [
+            ESItem(u"Lena-classic days 3-4", es_start_story("alt_day3_un_cl_start")),
+            ESItem(u"Old Lena-FZ day 4", es_start_story("alt_day4_un_fz_start_old")),
+            ESItem(u"Miku-classic day 4", es_start_story("alt_day4_mi_cl_start")),
+            ESItem(u"Alisa-classic start", es_start_story("alt_day4_dv_cl_start")),
+            ESItem(u"Slavya-witch start", es_start_story("alt_day4_sl_wh_start")),
+            ESItem(u"Deleted scenes from Slavya-CL intelligence branch",
+                   es_start_story("alt_day6_sl_cl_narcomania")),
+            ESItem(u"Previous page", [
+                Hide("unreleased_2_7dl", transition=Dissolve(0.2)),
+                ShowTransient("unreleased_1_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Next page", [
+                Hide("unreleased_2_7dl", transition=Dissolve(0.2)),
+                ShowTransient("unreleased_3_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Back", Hide("unreleased_2_7dl", transition=Dissolve(0.2))),
+        ]
+        return ESMode("unreleased_2_7dl", screen, items, u"Other stuff, page 2.",
+                      escape=Hide("unreleased_2_7dl", transition=Dissolve(0.2)))
+
+    def es_items_unreleased_3_7dl(screen):
+        items = [
+            ESItem(u"Old Sych day 6", es_start_story("alt_day6_me_neu_start_old")),
+            ESItem(u"Old Sych day 7", es_start_story("alt_day7_me_neu_start_old")),
+            ESItem(u"First Septima prologue", es_start_story("alt_septim_prologue_old")),
+            ESItem(u"Second Septima prologue", es_start_story("alt_septim_prologue")),
+            ESItem(u"Septima route start", es_start_story("alt_day1_me_d3_start")),
+            ESItem(u"Noir day 4", es_start_story("alt_day4_no_start")),
+            ESItem(u"Previous page", [
+                Hide("unreleased_3_7dl", transition=Dissolve(0.2)),
+                ShowTransient("unreleased_2_7dl", transition=Dissolve(0.2))
+            ]),
+            ESItem(u"Back", Hide("unreleased_3_7dl", transition=Dissolve(0.2))),
+        ]
+        return ESMode("unreleased_3_7dl", screen, items, u"Other stuff, page 3.",
+                      escape=Hide("unreleased_3_7dl", transition=Dissolve(0.2)))
+
+    def es_items_alt_need_binder(screen):
+        items = [ESItem(u"OK", Hide("alt_need_binder"))]
+        return ESMode("alt_need_binder", screen, items,
+            u"You must complete a heart puzzle to access this section.",
+            escape=Hide("alt_need_binder"))
+
+    # ------------------------------------------------------------------
+    # 7DL Gallery
+    # ------------------------------------------------------------------
+
+    def es_items_sdl_gall_main(screen):
+        mode = getattr(store, "sdl_gall_mode", "") or ""
+        items = []
+        if mode != "bgs":
+            items.append(ESItem(u"Backgrounds", [
+                SetVariable("sdl_gall_mode", "bgs"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_bw", transition=Dissolve(0.2)),
+                Show("sdl_gall_fw", transition=Dissolve(0.2)),
+                Show("sdl_gall_sshow", transition=Dissolve(0.2)),
+            ]))
+        else:
+            items.append(ESItem(u"Backgrounds, current"))
+        if mode != "arts":
+            items.append(ESItem(u"Arts / CGs", [
+                SetVariable("sdl_gall_mode", "arts"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_bw", transition=Dissolve(0.2)),
+                Show("sdl_gall_fw", transition=Dissolve(0.2)),
+                Show("sdl_gall_sshow", transition=Dissolve(0.2)),
+            ]))
+        else:
+            items.append(ESItem(u"Arts / CGs, current"))
+        if mode not in ("bgs", "filter"):
+            items.append(ESItem(u"Filter by character", [
+                Hide("sdl_gall_sshow", transition=Dissolve(0.2)),
+                Hide("sdl_gall_bw", transition=Dissolve(0.2)),
+                Hide("sdl_gall_fw", transition=Dissolve(0.2)),
+                SetVariable("sdl_gall_mode", "filter"),
+                SetVariable("sdl_gall_page", 1),
+                Show("sdl_gall_filter", transition=Dissolve(0.2)),
+            ]))
+        items.append(ESItem(u"Exit gallery", [
+            Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+            Hide("sdl_gall_bw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_fw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_sshow", transition=Dissolve(0.2)),
+            Hide("sdl_gall_exit", transition=Dissolve(0.2)),
+            Hide("sdl_gall_page_input", transition=Dissolve(0.2)),
+            SetVariable("sdl_gall_mode", ""),
+            SetVariable("sdl_gall_page", 1),
+            Jump("main_menu_7dl")
+        ]))
+        progress = getattr(store, "sdl_gall_progress", 0)
+        return ESMode("sdl_gall_main", screen, items,
+            u"Gallery. Progress {0}%.".format(progress),
+            escape=[Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+                    Hide("sdl_gall_bw", transition=Dissolve(0.2)),
+                    Hide("sdl_gall_fw", transition=Dissolve(0.2)),
+                    Hide("sdl_gall_sshow", transition=Dissolve(0.2)),
+                    Hide("sdl_gall_exit", transition=Dissolve(0.2)),
+                    SetVariable("sdl_gall_mode", ""),
+                    SetVariable("sdl_gall_page", 1),
+                    Jump("main_menu_7dl")])
+
+    def es_items_sdl_gall_photos(screen):
+        mode = getattr(store, "sdl_gall_mode", "") or "arts"
+        page = int(getattr(store, "sdl_gall_page", 1) or 1)
+        curr = list(getattr(store, "sdl_gall_curr_list", []) or [])
+        total_pages = __builtin__.max(1,(len(curr) - 1) // 6 + 1) if curr else 1
+        progress = getattr(store, "sdl_gall_progress", 0)
+        items = [
+            ESItem(u"Page {0} of {1}. Progress {2}%. Section: {3}.".format(
+                page, total_pages, progress,
+                u"backgrounds" if mode == "bgs" else (
+                    u"arts" if mode == "arts" else u"filter {0}".format(mode)))),
+        ]
+        # Section switches (stay inside photos; do not jump to main which auto-reopens)
+        if mode != "bgs":
+            items.append(ESItem(u"Switch to backgrounds", [
+                SetVariable("sdl_gall_mode", "bgs"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+            ]))
+        if mode != "arts":
+            items.append(ESItem(u"Switch to arts", [
+                SetVariable("sdl_gall_mode", "arts"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+            ]))
+        items.append(ESItem(u"Filter by character", [
+            Hide("sdl_gall_sshow", transition=Dissolve(0.2)),
+            Hide("sdl_gall_bw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_fw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+            SetVariable("sdl_gall_mode", "filter"),
+            SetVariable("sdl_gall_page", 1),
+            Show("sdl_gall_filter", transition=Dissolve(0.2)),
+        ]))
+
+        start_i = (page - 1) * 6
+        slice_ = curr[start_i:start_i + 6]
+        for i, img in enumerate(slice_):
+            try:
+                seen = sdl_gal_check_seen(img)
+            except Exception:
+                seen = False
+            try:
+                name = img.get_img()
+            except Exception:
+                name = u"image"
+            if seen:
+                hentai_ok = True
+                try:
+                    if mode == "arts" or mode in getattr(store, "sdl_gall_girls_list", []):
+                        hentai_ok = getattr(persistent, "hentai_graphics_7dl", False) or (not img.get_hent())
+                except Exception:
+                    pass
+                if hentai_ok:
+                    items.append(ESItem(
+                        u"Image {0}: {1}".format(start_i + i + 1, name),
+                        [
+                            Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+                            Hide("sdl_gall_bw", transition=Dissolve(0.2)),
+                            Hide("sdl_gall_fw", transition=Dissolve(0.2)),
+                            Hide("sdl_gall_sshow", transition=Dissolve(0.2)),
+                            Hide("sdl_gall_exit", transition=Dissolve(0.2)),
+                            Call("sdl_gall_show_imgs", img),
+                        ]))
+                else:
+                    items.append(ESItem(u"Image {0}: locked (18+ disabled)".format(start_i + i + 1)))
+            else:
+                items.append(ESItem(u"Image {0}: locked".format(start_i + i + 1)))
+        if page > 1:
+            items.append(ESItem(u"Previous page", [
+                SetVariable("sdl_gall_page", page - 1),
+                Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+            ]))
+        if page < total_pages:
+            items.append(ESItem(u"Next page", [
+                SetVariable("sdl_gall_page", page + 1),
+                Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+            ]))
+        items.append(ESItem(u"Slideshow", [
+            Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+            Hide("sdl_gall_bw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_fw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_sshow", transition=Dissolve(0.2)),
+            Jump("sdl_gall_sshow_imgs"),
+        ]))
+        items.append(ESItem(u"Exit gallery", [
+            Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+            Hide("sdl_gall_bw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_fw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_sshow", transition=Dissolve(0.2)),
+            Hide("sdl_gall_exit", transition=Dissolve(0.2)),
+            Hide("sdl_gall_page_input", transition=Dissolve(0.2)),
+            SetVariable("sdl_gall_mode", ""),
+            SetVariable("sdl_gall_page", 1),
+            SetVariable("sdl_gall_sshow", False),
+            Jump("main_menu_7dl"),
+        ]))
+        return ESMode("sdl_gall_photos", screen, items,
+            u"Gallery photos, page {0} of {1}.".format(page, total_pages),
+            escape=[
+                Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+                Hide("sdl_gall_bw", transition=Dissolve(0.2)),
+                Hide("sdl_gall_fw", transition=Dissolve(0.2)),
+                Hide("sdl_gall_sshow", transition=Dissolve(0.2)),
+                Hide("sdl_gall_exit", transition=Dissolve(0.2)),
+                SetVariable("sdl_gall_mode", ""),
+                SetVariable("sdl_gall_page", 1),
+                SetVariable("sdl_gall_sshow", False),
+                Jump("main_menu_7dl"),
+            ])
+
+
+    def es_items_sdl_gall_filter(screen):
+        items = [
+            ESItem(u"Miku", [
+                Hide("sdl_gall_filter", transition=Dissolve(0.2)),
+                SetVariable("sdl_gall_mode", "mi"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_bw", transition=Dissolve(0.2)),
+                Show("sdl_gall_fw", transition=Dissolve(0.2)),
+            ]),
+            ESItem(u"Alisa", [
+                Hide("sdl_gall_filter", transition=Dissolve(0.2)),
+                SetVariable("sdl_gall_mode", "dv"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_bw", transition=Dissolve(0.2)),
+                Show("sdl_gall_fw", transition=Dissolve(0.2)),
+            ]),
+            ESItem(u"Slavya", [
+                Hide("sdl_gall_filter", transition=Dissolve(0.2)),
+                SetVariable("sdl_gall_mode", "sl"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_bw", transition=Dissolve(0.2)),
+                Show("sdl_gall_fw", transition=Dissolve(0.2)),
+            ]),
+            ESItem(u"Lena", [
+                Hide("sdl_gall_filter", transition=Dissolve(0.2)),
+                SetVariable("sdl_gall_mode", "un"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_bw", transition=Dissolve(0.2)),
+                Show("sdl_gall_fw", transition=Dissolve(0.2)),
+            ]),
+            ESItem(u"Olga", [
+                Hide("sdl_gall_filter", transition=Dissolve(0.2)),
+                SetVariable("sdl_gall_mode", "mt"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_bw", transition=Dissolve(0.2)),
+                Show("sdl_gall_fw", transition=Dissolve(0.2)),
+            ]),
+            ESItem(u"Ulyana", [
+                Hide("sdl_gall_filter", transition=Dissolve(0.2)),
+                SetVariable("sdl_gall_mode", "us"),
+                SetVariable("sdl_gall_page", 1),
+                Function(sdl_gal_set_list),
+                Show("sdl_gall_photos", transition=Dissolve(0.2)),
+                Show("sdl_gall_bw", transition=Dissolve(0.2)),
+                Show("sdl_gall_fw", transition=Dissolve(0.2)),
+            ]),
+            ESItem(u"Back", [
+                Hide("sdl_gall_filter", transition=Dissolve(0.2)),
+                SetVariable("sdl_gall_mode", ""),
+                SetVariable("sdl_gall_page", 1),
+                Jump("main_menu_7dl"),
+            ]),
+        ]
+        return ESMode("sdl_gall_filter", screen, items, u"Filter gallery by character.",
+                      escape=[Hide("sdl_gall_filter", transition=Dissolve(0.2)),
+                              SetVariable("sdl_gall_mode", ""),
+                              Jump("main_menu_7dl")])
+
+    def es_items_sdl_gall_exit(screen):
+        items = [ESItem(u"Exit gallery", [
+            Hide("sdl_gall_photos", transition=Dissolve(0.2)),
+            Hide("sdl_gall_bw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_fw", transition=Dissolve(0.2)),
+            Hide("sdl_gall_sshow", transition=Dissolve(0.2)),
+            Hide("sdl_gall_exit", transition=Dissolve(0.2)),
+            Hide("sdl_gall_page_input", transition=Dissolve(0.2)),
+            SetVariable("sdl_gall_mode", ""),
+            SetVariable("sdl_gall_page", 1),
+            SetVariable("sdl_gall_sshow", False),
+            Jump("main_menu_7dl"),
+        ])]
+        return ESMode("sdl_gall_exit", screen, items, u"Exit gallery.",
+                      escape=[Hide("sdl_gall_exit", transition=Dissolve(0.2)),
+                              SetVariable("sdl_gall_mode", ""),
+                              SetVariable("sdl_gall_sshow", False),
+                              Jump("main_menu_7dl")])
+
+    # ------------------------------------------------------------------
     # Working out the current mode.
     # ------------------------------------------------------------------
 
     ES_SCREEN_MODES = [
+        # 7DL Stories — list overlays first; do NOT register stories_exit_7dl
+        # (it is always shown as a transient and would hide Moments/Road).
+        ("road_fanfics_1_7dl", es_items_road_fanfics_1_7dl),
+        ("road_fanfics_2_7dl", es_items_road_fanfics_2_7dl),
+        ("old_ends_mi_7dl", es_items_old_ends_mi_7dl),
+        ("old_ends_ps_7dl", es_items_old_ends_ps_7dl),
+        ("old_ends_sept_7dl", es_items_old_ends_sept_7dl),
+        ("old_ends_other_7dl", es_items_old_ends_other_7dl),
+        ("old_ends_7dl", es_items_old_ends_7dl),
+        ("unreleased_1_7dl", es_items_unreleased_1_7dl),
+        ("unreleased_2_7dl", es_items_unreleased_2_7dl),
+        ("unreleased_3_7dl", es_items_unreleased_3_7dl),
+        ("alt_need_binder", es_items_alt_need_binder),
+        ("road_main_7dl", es_items_road_main_7dl),
+        ("stories_main_7dl", es_items_stories_main_7dl),
+        # 7DL Gallery — photos/filter only (main/exit auto-show and steal focus)
+        ("sdl_gall_filter", es_items_sdl_gall_filter),
+        ("sdl_gall_photos", es_items_sdl_gall_photos),
+        # 7 Days of Summer — overlays MUST come before menu_7dl,
+        # because settings/contacts/media are shown on top of menu_7dl
+        # without hiding it.
+        ("settings_7dl", es_items_settings_7dl),
+        ("contacts_7dl", es_items_contacts_7dl),
+        ("media_7dl", es_items_media_7dl),
+        ("alt_preferences", es_items_alt_preferences),
+        ("alt_game_menu_selector", es_items_alt_game_menu),
+        ("alt_save", es_items_alt_save),
+        ("alt_load", es_items_alt_load),
+        ("alt_quit", es_items_alt_quit),
+        ("alt_changelog", es_items_alt_changelog),
+        ("alt_copy_saves", es_items_alt_copy_saves),
+        ("alt_confirm_reload", es_items_alt_confirm_reload),
+        ("menu_7dl", es_items_menu_7dl),
+        # Everlasting Summer stock screens
         ("yesno_prompt", es_items_yesno),
         ("quit", es_items_quit),
         ("_gallery", es_items_gallery_image),

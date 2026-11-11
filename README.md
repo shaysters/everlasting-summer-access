@@ -75,6 +75,7 @@ Notes:
 - On the camp map, each place says who is there and whether you've been there already.
 - In the card game, the mod tells you which of your cards your opponent wants, and which cards you gave away and received after each exchange. The list also has your whole hand, with any pairs, threes and fours.
 - Footnotes the game shows on screen, such as "Sovyonok means Owlet", are read as notes.
+- If you have the **7 Days of Summer** (7DS:LA) Steam Workshop mod, its menus are read too: its main menu, settings, contacts and media, its save and load, the Stories section with the fan fiction, old endings and unreleased material that come with it, and its gallery.
 
 ## Settings
 
@@ -109,6 +110,8 @@ To report a problem or suggest something, open an issue on the [GitHub page](htt
 ## Credits
 
 The mod's code, including the rewrite from the older Tolk mod and its fixes, was written by Claude, Anthropic's AI model, in Claude Code. The image descriptions were written by Claude too.
+
+Douglas G added support for the 7 Days of Summer mod, including its extra stories, fan fiction and unreleased material.
 
 The installer is built with [Loadstone](https://github.com/bradjrenshaw/loadstone) by [Bradley Renshaw](https://github.com/bradjrenshaw).
 

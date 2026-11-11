@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.0
+
+- Support for the 7 Days of Summer (7DS:LA) mod, added by Douglas G: its main menu, settings, contacts, media, save and load, game menu and quit prompts, the Stories section (fan fiction, old endings and unreleased material) and its gallery are all read.
+- The card game is also read in 7 Days of Summer's tournament, where your opponent can be one of several kinds of player.
+
 ## 0.9.2
 
 - When the main menu has been read, the mod tells you if a newer version is out. Run the installer to update. R repeats the message until the story starts.
