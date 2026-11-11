@@ -6,6 +6,7 @@ Run **EverlastingSummerAccessInstaller.exe** to install or update. Close the gam
 
 - Support for the 7 Days of Summer (7DS:LA) mod, added by Douglas G: its main menu, settings, contacts, media, save and load, game menu and quit prompts, the Stories section (fan fiction, old endings and unreleased material) and its gallery are all read.
 - The card game is also read in 7 Days of Summer's tournament, where your opponent can be one of several kinds of player.
+- The README has a new 7 Days of Summer section, including why its routes guide matters.
 
 
 ## Links

@@ -75,7 +75,18 @@ Notes:
 - On the camp map, each place says who is there and whether you've been there already.
 - In the card game, the mod tells you which of your cards your opponent wants, and which cards you gave away and received after each exchange. The list also has your whole hand, with any pairs, threes and fours.
 - Footnotes the game shows on screen, such as "Sovyonok means Owlet", are read as notes.
-- If you have the **7 Days of Summer** (7DS:LA) Steam Workshop mod, its menus are read too: its main menu, settings, contacts and media, its save and load, the Stories section with the fan fiction, old endings and unreleased material that come with it, and its gallery.
+
+## 7 Days of Summer
+
+7 Days of Summer (7DS:LA) is a large fan-made mod for Everlasting Summer, available on the Steam Workshop. If you have it installed, this mod reads its menus too:
+
+- its main menu, settings, contacts and media
+- its save and load, game menu and quit prompts
+- the Stories section, with the fan fiction, old endings and unreleased material that come with it
+- its gallery
+- the card game in its tournament
+
+Follow the routes guide that 7 Days of Summer provides. Its routes are meant to be played in a set order, because the story follows a chronology: later routes build on events and reveals from earlier ones. Playing them out of order can spoil the story or leave parts of it confusing.
 
 ## Settings
 
