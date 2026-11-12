@@ -288,7 +288,7 @@ init -90 python:
         return u"Page {0}".format(page)
 
     def es_slot_label(i):
-        when = FileTime(i, format=u"%d %B %Y, %H:%M", empty=u"")
+        when = es.clean(FileTime(i, format=u"%d %B %Y, %H:%M", empty=u""))
         if not when:
             return u"Slot {0}: empty".format(i)
         name = es.clean(FileSaveName(i))

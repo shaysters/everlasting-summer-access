@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.2
+
+- Save and load slots read the date cleanly. Before, the month came out with a stray code in front of it, such as "{#month}November".
+
 ## 0.10.1
 
 - 7 Days of Summer's camp maps work: the places you can go are listed, with who is there and any heart-puzzle piece, and Enter takes you there and carries on the story. Before, its maps weren't recognised at all. Thanks to Douglas G for finding and reporting this.
