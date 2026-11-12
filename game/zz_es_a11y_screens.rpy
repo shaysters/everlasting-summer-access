@@ -234,7 +234,23 @@ init -90 python:
         ]
         return ESMode("main_menu", screen, items, u"Everlasting Summer. Main menu.")
 
+    def es_7dl_noir_active():
+        # 7 Days of Summer's noir chapters swap in their own game screens.
+        screens = renpy.display.screen.screens
+        noir = screens.get(("noir_game_menu_selector", None))
+        return noir is not None and screens.get(("game_menu_selector", None)) is noir
+
     def es_items_game_menu(screen):
+        if es_7dl_noir_active():
+            items = [
+                ESItem(u"Return to the story", Return()),
+                ESItem(u"Save game", ShowMenu("save")),
+                ESItem(u"Load game", ShowMenu("load")),
+                ESItem(u"Settings", [ShowMenu("alt_preferences"), Hide("game_menu_selector")]),
+                ESItem(u"Main menu", [Function(store.noir_interface_off), MainMenu(confirm=False)]),
+                ESItem(u"Quit", ShowMenu("quit")),
+            ]
+            return ESMode("game_menu", screen, items, u"Game menu.", escape=Return())
         items = [
             ESItem(u"Return to the story", Return()),
             ESItem(u"Save game", ShowMenu("save")),
@@ -251,9 +267,20 @@ init -90 python:
 
     ES_PAGES = ["auto"] + [__builtin__.str(i) for i in __builtin__.range(1, 10)]
 
+    # 7 Days of Summer's own save screens use pages 701 to 799.
+    ES_7DL_PAGES = [__builtin__.str(i) for i in __builtin__.range(701, 800)]
+
+    def es_7dl_file_screen():
+        return es_screen("alt_save") is not None or es_screen("alt_load") is not None
+
     def es_page_name(page=None):
         if page is None:
             page = FileCurrentPage()
+        try:
+            if int(page) > 700:
+                return u"Page {0}".format(int(page) - 700)
+        except (TypeError, ValueError):
+            pass
         if page == "auto":
             return u"Autosaves"
         if page == "quick":
@@ -271,13 +298,14 @@ init -90 python:
 
     def es_change_page(delta):
         page = FileCurrentPage()
+        pages = ES_7DL_PAGES if es_7dl_file_screen() else ES_PAGES
         try:
-            idx = ES_PAGES.index(page)
+            idx = pages.index(__builtin__.str(page))
         except ValueError:
-            idx = 1
-        idx = __builtin__.max(0, __builtin__.min(len(ES_PAGES) - 1, idx + delta))
-        renpy.run([FilePage(ES_PAGES[idx]), SetVariable("selected_slot", False)])
-        es.ui(es_page_name(ES_PAGES[idx]) + u". " + es_slot_label(1))
+            idx = 0 if pages is ES_7DL_PAGES else 1
+        idx = __builtin__.max(0, __builtin__.min(len(pages) - 1, idx + delta))
+        renpy.run([FilePage(pages[idx]), SetVariable("selected_slot", False)])
+        es.ui(es_page_name(pages[idx]) + u". " + es_slot_label(1))
         es.nav_index[("save_load")] = 1
 
     def es_items_file(screen, saving):
@@ -290,15 +318,20 @@ init -90 python:
                 action = [SetVariable("selected_slot", i), FunctionCallback(on_load_callback, i), FileLoad(i)]
             items.append(ESItem(renpy.curry(es_slot_label)(i), action, delete=FileDelete(i),
                 after=renpy.curry(es_file_after)(i, saving)))
-        if saving:
+        own = es_7dl_file_screen()
+        back = [Hide("alt_save" if saving else "alt_load"), Return()] if own else Return()
+        if own:
+            pass
+        elif saving:
             items.append(ESItem(u"Switch to load", ShowMenu("load")))
         else:
             items.append(ESItem(u"Switch to save", ShowMenu("save")))
-        items.append(ESItem(u"Settings", ShowMenu("preferences")))
-        items.append(ESItem(u"Back", Return()))
+        if not own:
+            items.append(ESItem(u"Settings", ShowMenu("preferences")))
+        items.append(ESItem(u"Back", back))
         intro = u"Save game." if saving else u"Load game."
         intro += u" Enter {0} the selected slot, Delete erases it.".format(u"saves to" if saving else u"loads")
-        return ESMode("save_load", screen, items, intro + u" " + es_page_name() + u".", start=1, escape=Return())
+        return ESMode("save_load", screen, items, intro + u" " + es_page_name() + u".", start=1, escape=back)
 
     def es_file_after(i, saving):
         # Saving to an empty slot needs no confirmation, so say it worked.
@@ -425,6 +458,12 @@ init -90 python:
             ESItem(u"Load game", ShowMenu("load")),
             ESItem(u"Back", Return()),
         ]
+        screens = renpy.display.screen.screens
+        rp = screens.get(("replay_preferences", None))
+        if rp is not None and screens.get(("preferences", None)) is rp:
+            # Inside a 7 Days of Summer replay, settings is the way out.
+            items.insert(len(items) - 1, ESItem(u"End the replay",
+                [Function(store.replay_screens_load), EndReplay(confirm=False)]))
         return ESMode("preferences", screen, items,
             u"Settings. Left and right arrows change values, Enter toggles.", escape=Return())
 
@@ -1691,6 +1730,37 @@ init -90 python:
         return ESMode("movie_7dl", screen, items,
             u"7 Days of Summer opening video, about two minutes, with a song. Arrow down to read what it shows. Enter on Skip skips it.")
 
+    def es_items_cheat_7dl(screen):
+        return ESMode("cheat_7dl", screen, [], u"Cheat code entry. Type the code; a wrong letter closes it.")
+
+    def es_7dl_read_widgets():
+        # The points and music widgets 7 Days of Summer can show on screen
+        # (turned on in its settings).
+        texts = []
+        try:
+            layer = renpy.game.context().scene_lists.layers.get("overlay", [])
+            seen = __builtin__.set()
+            def walk(d):
+                if d is None or id(d) in seen:
+                    return
+                seen.add(id(d))
+                if isinstance(d, renpy.text.text.Text):
+                    t = es.clean(u"".join(x for x in d.text if isinstance(x, __builtin__.basestring)))
+                    if t:
+                        # The music widget shows the track's file name.
+                        texts.append(t.replace(u"_", u" ") if u" " not in t and u":" not in t else t)
+                    return
+                for c in d.visit() or []:
+                    walk(c)
+            for sle in layer:
+                walk(getattr(sle, "displayable", None))
+        except Exception:
+            es_log_exc("es_7dl_read_widgets")
+        if texts and hasattr(store, "widget_lp_7dl"):
+            es.ui(u". ".join(texts) + u".")
+        elif hasattr(store, "widget_lp_7dl"):
+            es.ui(u"No widget on screen. Turn on Widget (LP) or Widget (music) in 7 Days of Summer's settings.")
+
     def es_items_alt_700(screen):
         items = es_notice_lines(es_scope(screen, "alt_text")) + [ESItem(u"OK", Return(True))]
         return ESMode("alt_700", screen, items, u"Notice.", escape=Return(True))
@@ -2299,6 +2369,7 @@ init -90 python:
         ("alt_changelog", es_items_alt_changelog),
         ("alt_700", es_items_alt_700),
         ("alt_timer", es_items_alt_timer),
+        ("sdl_cheat_reader", es_items_cheat_7dl),
         ("sdl_replay_vars", es_items_replay_vars),
         ("alt_movie_screen", es_items_movie_7dl),
         ("alt_day0_charsel", es_items_charsel),
@@ -2637,7 +2708,10 @@ screen es_a11y_global():
 
     key "K_F1" action Function(es_help_key, _update_screens=False)
 
-    if _es_mode.nav:
+    if _es_mode.name == "cheat_7dl":
+        # 7 Days of Summer's cheat-code entry reads typed letters itself.
+        pass
+    elif _es_mode.nav:
         key "K_UP" action Function(es_nav_move, -1, _update_screens=False)
         key "repeat_K_UP" action Function(es_nav_move, -1, _update_screens=False)
         key "K_DOWN" action Function(es_nav_move, 1, _update_screens=False)
@@ -2675,6 +2749,7 @@ screen es_a11y_global():
         key "K_d" action Function(es_describe_scene, _update_screens=False)
         key "K_w" action Function(es_who, _update_screens=False)
         key "K_l" action ShowMenu("text_history_screen")
+        key "K_p" action Function(es_7dl_read_widgets, _update_screens=False)
 
 # 7 Days of Summer's quick-time event gives two seconds to press 7, too little
 # for a screen reader to finish the prompt. This screen takes its place with

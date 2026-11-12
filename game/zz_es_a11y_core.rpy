@@ -340,7 +340,30 @@ init -100 python:
         "backdrop_back", "backdrop_new", "day_num",
     ])
 
-    ES_ONSCREEN_TEXT_TAGS = __builtin__.set(["alt_credits", "alt_credits_jap", "alt_letter"])
+    def es_inline_image_text(name):
+        name = name.strip()
+        text = ES_DESCRIPTIONS.get(name, u"")
+        if text.startswith(u"Achievement banner: "):
+            return text[len(u"Achievement banner: "):]
+        if text:
+            return text
+        if name == "sdl_uv_chibi":
+            return u"Yulya, the cat-eared girl:"
+        try:
+            # A route's icon, as used on the statistics page.
+            for sec, routes in store.sdl_achv_section_to_routes.items():
+                for r in routes:
+                    if name in (r.get_icon_active(), r.get_icon_inactive()):
+                        who = dict(ES_7DL_SECTIONS).get(sec, u"")
+                        return u"{0}, {1}".format(who, es_7dl_image_text(r.get_title())).strip(u", ")
+        except Exception:
+            pass
+        try:
+            return es_7dl_image_text(name)
+        except Exception:
+            return u""
+
+    ES_ONSCREEN_TEXT_TAGS =__builtin__.set(["alt_credits", "alt_credits_jap", "alt_letter"])
 
     def es_image_key(name):
         if name is None:
@@ -400,7 +423,16 @@ init -100 python:
             message = u" ".join(unicode(p) for p in parts[1:]).strip()
             if len(message) > 1 and message[0] == message[-1] and message[0] in u"\"'":
                 message = message[1:-1]
-            message = es.clean(message.replace(u"\\n", u" "))
+            message = message.replace(u"\\n", u"\n")
+            try:
+                # Fill in [variables], as the game does when it draws it.
+                message = renpy.substitutions.substitute(message)[0]
+            except Exception:
+                pass
+            # Pictures inside the text (banners, route names) by name.
+            message = re.sub(r"\{image=([^}]+)\}", lambda m: es_inline_image_text(m.group(1)) + u" ", message)
+            lines = [es.clean(l) for l in message.split(u"\n")]
+            message = u" ".join(l if l[-1] in u".!?:,;" else l + u"." for l in lines if l)
             if message:
                 es.announce(u"Caption: " + message)
             return

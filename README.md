@@ -53,6 +53,7 @@ An earlier version of this mod used Tolk. The two can't be installed together. T
 | D | Story | Describe the scene, and say who is in view. In 7 Days of Summer's card tournament, also read the tournament table. |
 | W | Story | Say who is in view. |
 | L | Story | Open the text log. |
+| P | Story, 7 Days of Summer | Read 7 Days of Summer's on-screen widgets: your role, karma and points with each character, and the music playing. Turn them on in its settings (Widget (LP) and Widget (music)). |
 | Tab | Story | Turn skipping on or off. Hold Ctrl to skip only while held. |
 | Page Up | Story | Roll back to the previous line. |
 | Escape | Story | Open the game menu. |
@@ -94,6 +95,12 @@ This mod covers all of it:
 - the Stories section: the Moments replays, and the Old Road's fan fiction, old endings and unreleased material
 - the endings list (its achievements): every route and ending by name, which you have, what a locked one needs, and Enter to replay one you've reached, including the settings it asks for first
 - its camp maps: the places you can go, who is there, and Enter to go there
+- its noir chapters, which use their own dialogue, choice and game menu screens
+- its own save and load screens, when it's set to start with the game
+- ending a replay: press Escape during one and choose End the replay
+- the statistics page you unlock by finishing it
+- the points and music widgets (press P)
+- cheat codes: press the tilde key in its main menu and type the code; the mod stays quiet while you type
 - the gallery and the music player
 - day and chapter titles, lines it shows as text on screen (read as "Caption:"), and the "Achievement unlocked" banner when you reach an ending
 - descriptions of all its backgrounds and illustrations, like the original game's
