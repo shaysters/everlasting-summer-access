@@ -40,7 +40,7 @@ init -100 python:
         es_log("EXCEPTION in {0}:\n{1}".format(context, _es_traceback.format_exc()))
 
     es_log("=" * 60)
-    ES_VERSION = "0.10.2"
+    ES_VERSION = "0.10.3"
     es_log("Everlasting Summer accessibility mod {0} loading.".format(ES_VERSION))
 
     # ------------------------------------------------------------------
@@ -176,6 +176,12 @@ init -100 python:
             self.last_skipping = False
             self.present = {}
             self.current_scene = None
+            # What was on screen before the last "scene" statement, so a
+            # redraw of the same place and people stays quiet.
+            self.redraw = {}
+            # Other pictures (effects, captions) last shown, by tag.
+            self.others = {}
+            self.redraw_others = {}
             self.nav_index = {}
             self.nav_identity = None
             self.nav_previous = None
@@ -236,6 +242,9 @@ init -100 python:
             self.pending = True
 
         def line(self, text):
+            # A redraw only counts until the story moves on.
+            self.redraw = {}
+            self.redraw_others = {}
             self.remember(text)
             self.speak(text, not self.pending)
             self.pending = False
@@ -392,7 +401,14 @@ init -100 python:
 
     def es_scene_shown(parts):
         key = u" ".join(parts[:2])
+        previous = es.current_scene
         es.current_scene = key
+        if key == previous:
+            # The same place drawn again: nothing new to hear.
+            return
+        # A new place: anyone who shows up now is news.
+        es.redraw = {}
+        es.redraw_others = {}
         if key in ES_SILENT_IMAGES or parts[0] in ES_SILENT_IMAGES:
             return
         if not persistent.es_a11y_scenes:
@@ -416,6 +432,19 @@ init -100 python:
             if message:
                 es.announce(u"Scrawled over and over, in many hands: " + message)
             return
+        tag = parts[0]
+        if tag in ("black", "white", "red"):
+            # A plain colour fills the screen; the next place shown is a
+            # change even if it is the one from before.
+            es.current_scene = tag
+            es.others.pop(tag, None)
+            return
+        key = u" ".join(parts)
+        if es.others.get(tag) == key or es.redraw_others.get(tag) == key:
+            # The same picture or caption shown again.
+            es.others[tag] = key
+            return
+        es.others[tag] = key
         if parts[0] in ES_ONSCREEN_TEXT_TAGS and len(parts) > 1:
             # 7 Days of Summer shows narration as on-screen text:
             # show alt_credits "text".
@@ -431,12 +460,18 @@ init -100 python:
                 pass
             # Pictures inside the text (banners, route names) by name.
             message = re.sub(r"\{image=([^}]+)\}", lambda m: es_inline_image_text(m.group(1)) + u" ", message)
-            lines = [es.clean(l) for l in message.split(u"\n")]
-            message = u" ".join(l if l[-1] in u".!?:,;" else l + u"." for l in lines if l)
+            lines = [l for l in (es.clean(l) for l in message.split(u"\n")) if l]
+            out = []
+            for i, l in enumerate(lines):
+                following = lines[i + 1] if i + 1 < len(lines) else u""
+                # A sentence carried over to the next line needs no stop.
+                if l[-1] not in u".!?:,;…\"'" and not following[:1].islower():
+                    l += u"."
+                out.append(l)
+            message = u" ".join(out)
             if message:
                 es.announce(u"Caption: " + message)
             return
-        key = u" ".join(parts)
         text = ES_DESCRIPTIONS.get(key) or ES_DESCRIPTIONS.get(parts[0])
         if text and persistent.es_a11y_scenes:
             es.announce(text)
@@ -444,6 +479,10 @@ init -100 python:
     def es_sprite_shown(tag, parts):
         attrs = tuple(parts[1:])
         old = es.present.get(tag)
+        if old is None:
+            # Shown again right after the scene was redrawn: only changes
+            # in look are worth hearing.
+            old = es.redraw.pop(tag, None)
         es.present[tag] = attrs
         if not persistent.es_a11y_characters:
             return
@@ -526,6 +565,7 @@ init -100 python:
         if not parts:
             return
         tag = parts[0]
+        es.others.pop(tag, None)
         if tag in ES_CHARACTER_TAGS and tag in es.present:
             del es.present[tag]
             if persistent.es_a11y_characters and not config.skipping:
@@ -545,14 +585,22 @@ init -100 python:
             es_log_exc("es_renpy_hide_proxy")
         return es_orig_renpy_hide(name, layer, *args, **kwargs)
 
+    def es_on_scene():
+        # Remember who and what was here, so that redrawing the same place
+        # with the same people does not announce them all again.
+        es.redraw.update(es.present)
+        es.redraw_others.update(es.others)
+        es.present = {}
+        es.others = {}
+
     def es_scene_proxy(layer="master", *args, **kwargs):
         if layer in (None, "master"):
-            es.present = {}
+            es_on_scene()
         return es_orig_config_scene(layer, *args, **kwargs)
 
     def es_renpy_scene_proxy(layer="master", *args, **kwargs):
         if layer in (None, "master"):
-            es.present = {}
+            es_on_scene()
         return es_orig_renpy_scene(layer, *args, **kwargs)
 
     config.show = es_proxy(es_show_proxy, es_orig_config_show)

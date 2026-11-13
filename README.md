@@ -86,6 +86,8 @@ Notes:
 
 Subscribe to only one of them. The two can't be installed together: the game shows an error and won't start. If you switch, unsubscribe from the other first. Subscribe on Steam and it loads with the game; open it from the game's mods list.
 
+**Content warning:** 7 Days of Summer is written for adults and has no warning of its own, so the mod shows one each time you start a new 7 Days of Summer story. Some routes contain disturbing violence, blood, death and murder, and frightening scenes, with mentions of suicide, sexual assault and abuse, and plenty of drinking and smoking. Choose Continue to start the story or Back to the menu.
+
 This mod covers all of it:
 
 - its main menu, settings, contacts, media, save and load, game menu and quit prompts
@@ -120,7 +122,7 @@ Follow the routes guide that 7 Days of Summer provides. Its routes are meant to 
 
 The mod's settings are near the end of the game's own **Settings** menu (main menu, or Escape then Settings). Use Up and Down to move, and Enter or Left and Right to turn a setting on or off. Changes are saved immediately.
 
-- **Describe scenes** (on by default): read a description of each background and illustration when it appears.
+- **Describe scenes** (on by default): read a description of each background and illustration when it appears. A description is only read when the picture changes, not when the game redraws the same place; press D to hear it again.
 - **Announce characters arriving and leaving** (on by default): also says when a character changes clothes, for example into a swimsuit.
 - **Announce facial expressions** (off by default): say when a character's expression changes, for example "Alisa: smiling."
 - **Read speaker names** (on by default): read who is speaking before each line.

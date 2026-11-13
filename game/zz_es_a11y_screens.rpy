@@ -1761,6 +1761,16 @@ init -90 python:
         elif hasattr(store, "widget_lp_7dl"):
             es.ui(u"No widget on screen. Turn on Widget (LP) or Widget (music) in 7 Days of Summer's settings.")
 
+    def es_items_7dl_warning(screen):
+        # The whole warning is read on arrival, then focus rests on Continue;
+        # the paragraphs stay in the list above it to read again.
+        paras = es_7dl_warning_paragraphs()
+        items = [ESItem(p) for p in paras]
+        items += [ESItem(u"Continue", Return(True)), ESItem(u"Back to the menu", Return(False))]
+        return ESMode("es_7dl_content_warning", screen, items,
+                      es_7dl_warning_title() + u". " + u" ".join(paras),
+                      start=len(paras), escape=Return(False))
+
     def es_items_alt_700(screen):
         items = es_notice_lines(es_scope(screen, "alt_text")) + [ESItem(u"OK", Return(True))]
         return ESMode("alt_700", screen, items, u"Notice.", escape=Return(True))
@@ -2364,6 +2374,7 @@ init -90 python:
 
     ES_SCREEN_MODES = [
         # 7 Days of Summer prompts that sit on top of everything else.
+        ("es_7dl_content_warning", es_items_7dl_warning),
         ("alt_load_warning", es_items_7dl_save_warning),
         ("alt_incompatible_release", es_items_7dl_save_warning),
         ("alt_changelog", es_items_alt_changelog),
@@ -2764,3 +2775,70 @@ init 1000 python:
     ES_7DL_QTE_SECONDS = 8.0
     if ("alt_timer", None) in renpy.display.screen.screens:
         renpy.display.screen.screens[("alt_timer", None)] = renpy.display.screen.screens[("es_7dl_alt_timer", None)]
+
+# 7 Days of Summer has no content warning of its own. This one is shown
+# before every new 7DL story, for every player.
+screen es_7dl_content_warning():
+    modal True
+    zorder 1500
+    add Solid("#000000d8")
+    frame:
+        xalign 0.5
+        yalign 0.5
+        xmaximum 1200
+        padding (50, 40)
+        background Solid("#1b1430f0")
+        vbox:
+            spacing 24
+            text es_7dl_warning_title() size 44 color "#ffffff" xalign 0.5
+            for _es_para in es_7dl_warning_paragraphs():
+                text _es_para size 28 color "#ffffff"
+            hbox:
+                xalign 0.5
+                spacing 80
+                textbutton u"Continue" action Return(True) text_size 34
+                textbutton u"Back to the menu" action Return(False) text_size 34
+    key "K_ESCAPE" action Return(False)
+
+label es_7dl_content_warning:
+    call screen es_7dl_content_warning
+    if not _return:
+        jump main_menu_7dl
+    $ es_7dl_warning_arm(False)
+    jump start_7dl
+
+init 1000 python:
+    ES_7DL_WARNING = [
+        u"7 Days of Summer is a fan-made story for adults. Some routes contain disturbing violence, blood, death and murder, and some scenes are frightening.",
+        u"It also includes mentions of suicide, sexual assault and abuse, and plenty of drinking and smoking.",
+        u"This warning comes from the Everlasting Summer Access mod, as 7 Days of Summer shows none itself.",
+    ]
+
+    def es_7dl_warning_title():
+        return u"Content warning"
+
+    def es_7dl_warning_paragraphs():
+        return ES_7DL_WARNING
+
+    def es_7dl_warning_arm(on):
+        # Starting a new 7DL story goes through the warning first. The
+        # warning switches this off just long enough to start the story.
+        if on:
+            config.label_overrides["start_7dl"] = "es_7dl_content_warning"
+        else:
+            config.label_overrides.pop("start_7dl", None)
+
+    es_orig_label_callback = es_original(config.label_callback)
+
+    def es_label_callback(name, abnormal):
+        try:
+            if name == "start_7dl":
+                es_7dl_warning_arm(True)
+        except Exception:
+            es_log_exc("es_label_callback")
+        if es_orig_label_callback is not None:
+            return es_orig_label_callback(name, abnormal)
+
+    if renpy.has_label("start_7dl"):
+        es_7dl_warning_arm(True)
+        config.label_callback = es_proxy(es_label_callback, es_orig_label_callback)
